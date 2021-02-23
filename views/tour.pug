@@ -1,0 +1,108 @@
+extends base
+include _reviewCard
+
+block append head
+  script(src='/js/mapbox.js', async)
+  script(src='https://api.mapbox.com/mapbox-gl-js/v2.1.1/mapbox-gl.js')
+  link(
+    href='https://api.mapbox.com/mapbox-gl-js/v2.1.1/mapbox-gl.css',
+    rel='stylesheet'
+  )
+
+mixin overviewBox(href, label, text)
+  .overview-box__detail
+    svg.overview-box__icon
+      use(href=href)
+    span.overview-box__label= label
+    span.overview-box__text= text
+
+block content
+  section.section-header
+    .header__hero
+      .header__hero-overlay &nbsp;
+      img.header__hero-img(
+        src=`/img/tours/${singleTour.imageCover}`,
+        alt=`${singleTour.name}`
+      )
+
+    .heading-box
+      h1.heading-primary
+        span= singleTour.name
+      .heading-box__group
+        .heading-box__detail
+          svg.heading-box__icon
+            use(href='/img/icons.svg#icon-clock')
+          span.heading-box__text= `${singleTour.duration} days`
+        .heading-box__detail
+          svg.heading-box__icon
+            use(href='/img/icons.svg#icon-map-pin')
+          span.heading-box__text= `${singleTour.startLocation.description}`
+
+  section.section-description
+    .overview-box
+      div
+        .overview-box__group
+          h2.heading-secondary.ma-bt-lg Quick facts
+
+          - const date = singleTour.startDates[0].toLocaleString("en-us", { month: "long", year: "numeric" });
+
+          +overviewBox('/img/icons.svg#icon-calendar', 'Next date', date)
+          +overviewBox('/img/icons.svg#icon-trending-up', 'Difficulty', singleTour.difficulty)
+          +overviewBox('/img/icons.svg#icon-user', 'Participants', `${singleTour.maxGroupSize} people`)
+          +overviewBox('/img/icons.svg#icon-star', 'Rating', `${singleTour.ratingsAverage}/ 5`)
+
+        .overview-box__group
+          h2.heading-secondary.ma-bt-lg Your tour guides
+          each tourGuide in singleTour.guides
+            .overview-box__detail
+              img.overview-box__img(
+                src=`/img/users/${tourGuide.photo}`,
+                alt=`${tourGuide.name}`
+              )
+              - if(tourGuide.role === 'lead-guide') 
+                span.overview-box__label Lead guide
+              - if(tourGuide.role === 'guide') 
+                span.overview-box__label Tour guide
+              span.overview-box__text= `${tourGuide.name}`
+
+    .description-box
+      h2.heading-secondary.ma-bt-lg= `About ${singleTour.name}`
+
+      - const descriptionSplit = singleTour.description.split("\n");
+
+      each paragraph in descriptionSplit
+        p.description__text= paragraph
+
+  section.section-pictures
+    each picture, index in singleTour.images
+      .picture-box
+        img.picture-box__img(
+          src=`/img/tours/${picture}`,
+          alt=`${singleTour.name} tour ${index + 1}`,
+          class=`picture-box__img--${index + 1}`
+        )
+
+  section.section-map
+    #map(data-locations=`${JSON.stringify(singleTour.locations)}`)
+
+  section.section-reviews
+    .reviews
+      each singleReview in singleTour.reviews
+        +reviewCard(singleReview)
+
+  section.section-cta
+    .cta
+      .cta__img.cta__img--logo
+        img(src='/img/logo-white.png', alt='Natours logo')
+      img.cta__img.cta__img--1(
+        src=`/img/tours/${singleTour.images[0]}`,
+        alt=''
+      )
+      img.cta__img.cta__img--2(
+        src=`/img/tours/${singleTour.images[1]}`,
+        alt=''
+      )
+      .cta__content
+        h2.heading-secondary What are you waiting for?
+        p.cta__text= `${singleTour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
+        button.btn.btn--green.span-all-rows Book tour now!

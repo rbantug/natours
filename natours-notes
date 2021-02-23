@@ -1,0 +1,1413 @@
+ HTTP Methods we should respond to when creating an API:
+
+    Post
+
+    Get
+
+    Put
+
+    Patch
+
+    Delete
+
+These HTTP methods will enable us to create, read, update and delete (CRUD) data in the server
+
+In RESTFUL API, the server will not save the state of a client, thus making it stateless. The server does not know the previous interaction with the client.
+
+We need to request the specific data to the server and we (client) must not assume that the server knows what the current state of the client.
+
+Ex: We need to request the next page, page 6, from the server. Our currentpage is 5
+
+We can't use '/nextpage' as the endpoint because the server does not know that our currentpage is 5.
+
+We should instead use '/page/6' 
+
+////////////////////////////////////
+// Installing ESlint & prettier dev-dependencies
+////////////////////////////////////
+
+Aside from ESlint & prettier, we will be install a lot of packages in order for both ESlint and prettier to work together:
+
+1. eslint-config-prettier
+--- this will disable formatting in eslint because prettier will do that
+
+2. eslint-plugin-prettier
+--- this will enable eslint to show errors as we type using prettier
+
+3. eslint-config-airbnb
+--- a javascript style guide
+
+4. eslint-plugin-node
+--- this will add a couple of specific eslint rules in node
+
+5. eslint-plugin-import
+6. eslint-plugin-jsx-a11y
+7. eslint-plugin-react
+--- these 3 are required for the airbnb style guide to work
+
+add '--save-dev' at the end.
+
+////////////////////////////////////////
+// MongoDB
+////////////////////////////////////////
+
+MongoDB is a document database that are NoSQL (SQL pronounced as 'sequel'). NoSQL are non-relational databases.
+
+The data format that MongoDB uses is BSON (Binary Javascript Object Notation), which is similar to JSON. The difference is that the data type for BSON are 'typed', meaning all values will have it's own data type (string, number, boolean, etc) 
+
+Relational databases are tables, like spreadsheets. A disadvantage of using relational databases is the inability to store more than 1 value per attribute. In a table, columns are the attribute/property and rows are the values are located.
+
+In MongoDB, you can add multiple values per attribute, like arrays or objects. Using objects or arrays as values for an attribute is called Embedding or Denormalizing. It's like nesting objects/arrays within another object.
+
+In a relational database, since you can't add more than 1 value to an attribute, you would need to create another table to show mutiple values. This is called Normalization.
+
+2 more things to know about BSON:
+--- Max file size is 16MB. It might increase in the future (October 2020)
+--- Each document contains an unique ID, which acts as the primary key of the document. It's automatically generated with the object ID data type each time there is a new document.
+
+////////////////////////////////////////
+// Getting started in MongoDB
+////////////////////////////////////////
+
+///// Creating Databases, Collections and Documents
+
+'use' is used to create databases or get access to another database.
+
+example: 'use natours-test' will create a new database named natours-test
+
+A database contains collections and a collection contains documents.
+
+To create a new collection plus a document in an existing database:
+
+'db.newCollection1.insertOne({name: "Sample Name", age: 22})'
+
+'db' is the natours-test database. 'newCollection1' is a new collection that will be created under natours-test database. 'insertOne()' is a method to create 1 new document in the newCollection1.
+
+You can add a JSON or a BSON in the insertOne() method. Please use a double quotation mark for strings.
+
+To show all the existing databases:
+
+'show dbs'
+
+---Please note that if you create a database with 'use' but did not add any collection or documents in it, it will not show up in the list.
+
+To show all the collections in the database you are currently in:
+
+'show collections'
+
+//// Reading Databases, Collections and Documents
+
+To show all the content of the collection:
+
+'db.newCollection1.find()'
+
+To find specific content of the collection:
+'db.newCollection1.find({name: "sample name"})'
+
+-- if there are no matches, MongoDB will not return anything
+
+// Query Operators
+
+'$' is reserved for Operators
+
+If we need to use regular expression to find documents that will match the regex, here's an example:
+
+db.newCollection1.find({name: {$regex: "anything"}})
+
+------------------
+
+If we need to use greater than (equal) or less than (equal):
+
+db.newCollection1.find({age: {$gt: 0}}) // greater than
+db.newCollection1.find({age: {$lt: 0}}) // less than
+db.newCollection1.find({age: {$gte: 0}}) // greater than equal
+db.newCollection1.find({age: {$lte: 0}}) // less than equal
+
+------------------
+
+If we need to find documents that matches ANY of the multiple conditions:
+
+db.newCollection1.find({age: {$in: [0, 1]}}) // This will find documents with ages 0 & 1
+
+another way is using '$or'
+
+db.newCollection1.find({$or: [{age: 0},{name: "simple"}]}) // This will find documents with age 0 OR name "simple"
+
+------------------
+
+db.newCollection1.find({name: {$in:[/regex pattern/, /regex pattern/]}) // This will find documents that matches with the 2 regex patterns
+
+------------------
+
+If we need to find documents that matches all of the conditions:
+
+db.newCollection1.find({name: "sample", age: 22}) // This will find a document with the name "sample" & age 22. You can mix in a $regex in conditions.
+
+------------------
+
+Projection will let you show the field(s) that you like in the result:
+
+db.newCollection1.find({name: "sample", age: 22}, {name: 1}) // This will only show the name field of the result
+
+db.newCollection1.find({name: "sample", age: 22}, {name: 1, age: 1}) // This will only show the name & age fields of the result
+
+-------------------
+
+// Finding nested fields:
+
+Here's an example:
+
+{ item: "sketch pad", qty: 95, size: { h: 22.85, w: 30.5, uom: "cm" }, status: "A" }
+
+If we need to find or update the height field under the size field:
+
+db.newCollection1.find({"size.h": 22.85})
+
+size.h must be enclosed in double quotation marks!!!
+
+////// Updating Documents
+
+We can use several methods:
+
+db.collection.updateOne()
+db.collection.updateMany()
+db.collection.replaceOne()
+db.collection.findOneAndUpdate()
+
+All methods above will need a filter to find the document that we need to update. The filter is the first parameter. The second parameter is for the item(s) that we want to update. In the case of replaceOne(), it will replace the document, not just certain fields.
+
+//Syntax for updateOne() & updateMany():
+
+db.collection.updateOne({name: "sample"}, {$set: {name: "another sample"}})
+
+The '$set' operator replaces the value of a field with the specified value. 
+
+For updateOne(), it will update the first document that matches with the filter. For updateMany(), it will update all the documents that matches with the filter.
+
+//Syntax for replaceOne: The same with updateOne() or updateMany(), just without the '$set' operator
+
+//Syntax for findOneAndUpdate():
+
+Almost the same with updateOne() or updateMany(), but you have the option to return the updated document or do other stuff. Just check the documentation
+
+db.collection.findOneAndUpdate({name: "sample"}, {$set: {name: "another name"}}, {returnNewDocument: true})
+
+// Removing a field
+
+Instead of '$set', we will use the '$unset' when updating the database. The '$unset' operator will remove a field. Using updateMany() will remove the field in all the documents that matches the filter. 
+
+/////// Deleting documents
+
+Here are the methods for deleting documents:
+
+db.collection.deleteOne()
+db.collection.deleteMany()
+
+In most cases, you'll just need to pass a filter of the items you'd like to delete. You can also use an empty object '{}', which will delete all your documents.
+
+/////////////////////////////
+// Using Atlas
+/////////////////////////////
+
+Mongodb has a service that will enable you to access your database online
+
+just watch the lessons in udemy 
+
+/////////////////////////////
+// How to connect Mongodb to your App
+/////////////////////////////
+
+// If using Atlas
+
+In Atlas, go to 'Connect' > 'Connect your Application' > copy the link and paste that to the config file that contains the environment variables. 
+
+Create a new variable 'DATABASE' and paste the link from Atlas
+
+We need to edit some stuff in the link. Here's an example of the link:
+
+mongodb+srv://lilokie:<password>@cluster0.swqde.mongodb.net/<dbname>?retryWrites=true&w=majority
+
+-- in <password>, we will change that later. For now, change it to '<PASSWORD>'
+
+-- <dbname> is the name of the database in Atlas. We will change it to 'natours'
+
+// If using Localhost
+
+Create a new environment variable 'DATABASE_LOCAL' and it will contain:
+
+mongodb://localhost:27017/<dbname>
+
+-- <dbname> is the database name in your local mongodb
+
+// Using Mongoose as the Mongodb driver to communicate with NodeJS
+
+We need to require mongoose in server.js. Next, we will create a variable that will contain the string we got from Atlas. We will use a string.replace() method to change the <password> to the one in the config.env
+
+/////////////////////////
+// About Mongoose
+/////////////////////////
+
+Mongoose is all about models. Models are like a blueprint used to create documents. This is similar to Classes in javascript.
+
+We need a model to do the CRUD operation on the document that we will make using the model. In order to create a model, we need a Schema (Schematic / Entity Relationship Diagram).
+
+We use schema to describe our data, to set default values, to validate data, etc.
+
+
+/////////////////////////
+//  Troubleshooting with MongoDB and Mongoose
+/////////////////////////
+
+'MongooseServerSelectionError: connection timed out'
+
+-- Check your IP in mongodb atlas. It should be '0.0.0.0/0' and your current IP address
+
+-- MongoDB altas should be open in browser
+
+'querySrv ESERVFAIL _mongodb._tcp.cluster0.swqde.mongodb.net'
+
+-- when getting the connection string in mongodb atlas, use the driver and version '2.2.12 or later'
+
+
+/////////////////////////////////////////
+// About Slugify
+/////////////////////////////////////////
+
+Slugify is a module that will let you replace white spaces with symbols or remove symbols. You can also convert strings into lowercase. Use case is for changing string for URL. 
+
+how to install: run 'npm i slugify' and require it on your file 'require('slugify')'
+
+how to use: 'slugify(the string you need to change, options)'
+
+check documentation for options: https://www.npmjs.com/package/slugify
+
+///////////////////////////////////////
+// Data Validation with Mongoose
+///////////////////////////////////////
+
+https://mongoosejs.com/docs/schematypes.html#schematype-options
+
+Validation is checking if the data entered is in the right format for each field in our document schema and if those fields that requires a data actually do get data inputted into them.
+
+Mongoose has built-in validators for each Schematype. Please note that 'unique' is not a validator.
+
+Only 'required' and 'validate' can be used in all schematypes. 
+
+Please check the documentation for a list of schematype options that can be used as validators
+
+Regarding the schematype option for strings, minlength and maxlength, length includes the whitespaces. AND do not use camelcase. minLength or maxLength will not work.
+
+Regarding 'enum' validator option for strings, enum usually accepts an array of values. Now the problems is that you can't specfify a message in case of an error. But you can pass a message because the enum mongoose is using is actually a shorthand for {values:[], message: ''}. 
+
+We can create custom validators using the 'validate' validator option. Syntax:
+
+We need to check if the discount price is below the regular price
+
+validate: {
+    validator: function (val) {
+        return val < this.regularPrice
+    },
+    message: 'The discount price ({VALUE}) must be below the regular price'
+}
+
+Important stuff to point out: 
+-- We are using a function declaration instead of a arrow function (expression) because we need access to 'this'. The 'this' refers to the current document. And with 'this.regularPrice', we have access to the regular price in the document.
+
+-- Since 'this' is refering to the current document when creating a new document, the validator will not work when updating a document even if the 'runValidators' option is true in the '.findByIdAndUpdate()' method.
+
+-- The parameter 'val' is the value we input in the regularPrice field.
+
+-- The function should return a boolean. Truthy values & undefined means that there is no error. Falsy values except undefined means that there is an error and the message will run.
+
+-- {VALUE} in the message is a mongoose thing. It's the same with 'val' in the function parameter. It will show what we input in the regularPrice field.
+
+/////////////////////////////////
+// Debugging with ndb
+/////////////////////////////////
+
+We can debug in vscode but we will use a npm package called 'ndb'. Install 'ndb' as a dev-dependency 'npm i ndb --save-dev' or install it as global 'npm i ndb --global'. Only dev-dependency works in the laptop. And then run 'ndb server.js' or create a script that would run that.
+
+The fundamental aspect of Debugging is to set breakpoints. Breakpoints are points in our code that we can define in the debugger where we will intentionally let our code stop running. This will give us time to check on the values of the variables in the previous lines of code and find the bugs.
+
+To set a breakpoint, click on the line number on the left side of the code. Everytime we run our app, which could be thru requesting a response using Postman or by right-clicking in the debugger and clicking 'run script', the code will stop on that breakpoint. To start with the debugging, we will comb thru each line on code that is associated to the breakpoint. On the top right side of the window, there are controls to navigate thru our code. 
+
+'Step' (F9) will enable us to jump to the next line of code.
+
+The other options are self explanatory. Please check them yourselves.
+
+Everytime we jump to the next line of code, we will check the values of the variables in the previous line of code. It is thru this that we will be able to find possible bugs in our code.
+
+///////////////////////////////////////////
+// Error Handling in Express
+///////////////////////////////////////////
+
+There are 2 types of errors that can occur, operational error and programming error.
+
+Operational errors are errors that we can anticipate and will definitely happen in the future. We just need a way to handle them properly. This error usually happens when a user requested an invalid URL, when the server/database is down or Request timeout (request took too long).
+
+Programming errors are bugs in our code. The programmer is to blame for this type of error. 
+
+/////////////////////////////////////////
+// Error handling for Async function in Express
+/////////////////////////////////////////
+
+https://stackoverflow.com/questions/51391080/handling-errors-in-express-async-middleware
+
+Around the time I'm writing this, I already know that we need a global error handling middleware to catch all errors from async functions in the route middlewares. And I already created that middleware in errorController.js and it was exported to app.js. 
+
+A common way to catch errors in Async functions is the try/catch block. The problem is that try/catch won't catch a Promise rejection outside of an async function, which means that we can't use our error handling middleware. A solution is to add 'next(err)' in the catch block because any argument inside the next() is an error and it will skip all other middlewares and proceed to the error handling middleware. 
+
+try{code} catch(err) {next(err)}
+
+The next problem is that all the catch block will contain the same code and we want to keep our code clean. So we can go thru 2 routes, the one proposed by Jonas and another by a guy in stackoverflow
+
+Jonas' solution:
+
+const catchAsync = fn => {
+    return (req, res, next) => {
+        fn(req, res, next).catch(next)
+    }
+}
+
+Stackoverflow guy's solution:
+
+const asyncHandler = fn => (req, res, next) => {
+    return Promise
+        .resolve(fn(req, res, next))
+        .catch(next);
+};
+
+Both solutions are almost the same. The differences are only in the use of 'Promise' and '.resolve'. 
+
+The explanation by Jonas on how this will work:
+
+Here's the code for creating a new document
+
+exports.createTour = catchAsyncErrors(async (req, res, next) => {
+  const newTour = await Tour.Tour.create(req.body);
+
+  res.status(201).json({
+    status: 'success',
+    data: {
+      tour: newTour,
+    },
+  });
+});
+
+When we run our app (npm start), catchAsyncErrors will run. This will replace the content of exports.createTour from the one above to the code inside the catchAsyncErrors, which is:
+
+(req, res, next) => { fn(req, res, next).catch(next) }
+
+What is important to note is we included 'return' in the catchAsyncErrors since we want to replace code of exports.createTour. 
+
+/////////////////////////////////////////
+// Operational errors from Mongoose/MongoDB
+/////////////////////////////////////////
+
+There are 3 errors from Mongoose that should be considered as operational errors. 
+
+1. Errors when the client uses a wrong ID when searching/updating/deleting one tour.
+
+2. Errors when creating a duplicate document. This is specific to 'unique' schema option. Please note that 'unique' is not a validator. It's an error from MongoDB
+
+3. Errors when creating a document with field values not within the min/max values set in the schema
+
+The error messages provided by mongoose is not easily understood and it is not helpful to the client
+
+////////////////////////////////////////////
+// Fixing Unhandled Promise Rejection
+////////////////////////////////////////////
+
+'Rejections' are technically promises reporting an error. Normally, we would have a 'catch' block (try/catch block) to handle/show/log that error. But there are cases when a promise has no catch block. 
+
+An example is when we can't connect to mongoDB because mongoDB is not working or when there is no internet connection or the password we used is incorrect. 
+
+Since this is a node error and not an express or mongoose error, we can't use our global error handling middleware. A solution is to add '.catch()' to mongoose.connect(). Please note that mongoose.connect() returns a promise.
+
+When we encounter this type of errors, node will show these 2 stuff in the terminal: 
+
+1. UnhandledPromiseRejectionWarning: Unhandled promise rejection
+
+2. DeprecationWarning: Unhandled promise rejections are deprecated. In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code
+
+#1 can be easily fixed by adding a '.catch()' at mongoose.connect(). But this fix is only for mongoose.connect() and it's will not handle the rejection of other promises in our code. 
+
+Here's a solution:
+
+process.on('UnhandledRejection', (err) => {
+  console.log(err.name, err.message);
+  console.log('Unhandled Rejection. Shutting Down...')
+  server.close(() => {
+    process.exit(1)
+  });
+});
+
+We usually put this code at the end of our code to catch all async errors.
+
+'process.on' accepts 2 arguments, the first is probably an event and the 2nd argument is a callback funciton. This is an eventlistener that waits for first parameter before running the callback function.
+
+https://nodejs.org/api/process.html#process_event_unhandledrejection
+
+Regarding 'UnhandledRejection', each time a unhandled rejection occurs in our code, the process object will create an object/event called 'unhandledRejection'. We can use that to trigger the callback function to show the error name and message. 
+
+'server.close()' accepts a callback function. Please note that 'server' is 'app.listen' in server.js. '.close()' method doesn't actually close the server, it just stops new connections. In order to stop the server, we will include 'process.exit(1)' in the callback function. 
+
+////////////////////////////////////////
+// Fixing Uncaught Exceptions
+////////////////////////////////////////
+
+Uncaught Exceptions are bugs in our code. These are usually errors from synchronous code. These errors are dealt the same way with unhandled rejections. 
+
+process.on('uncaughtException', (err) => {
+  console.log('Unhandled Exception. Shutting Down...')
+  console.log(err.name, err.message);
+  process.exit(1)
+});
+
+We usually put this code before requiring app.js to ensure that all sync errors are caught. Please note that we remove 'server.close()' because this does not need app.listen. 
+
+Each time an Uncaught Exception occurs, process will create an object/event called 'uncaughtException'. We can use this to trigger the callback function to run process.exit().
+
+///////////////////////////////////////
+// app.use() VS app.all()
+///////////////////////////////////////
+
+If app.use('/tour'), 'tour/1' will work and it will proceed to the route handler.
+
+If app.all('/tour'), '/tour/1' will NOT work and it will send an error.
+
+app.all takes multiple callbacks, and meant for routing. with multiple callbacks you can filter requests and send responses. app.all will match complete path. 
+
+app.use takes only one callback function and it's meant for Middleware. Middleware usually doesn't handle request and response, (technically they can) they just process input data, and hand over it to next handler in queue. app.use only sees whether url starts with the specified path. 
+
+///////////////////////////////////////
+// User Resource
+///////////////////////////////////////
+
+The user resource is different from the other resources because it has to do with authentication, which we have a separate controller. Unlike the tour routes, instead of 'createTour', we have 'signup'.
+
+
+///////////////////////////////////////
+// nodeJS's util.promisify()
+///////////////////////////////////////
+
+util.promisify() is a method used to convert callback based APIs to promise based APIs. This method is available to NodeJS since version 8 and we just need to require the 'util' module to use this method.
+
+Why convert callback based APIs to promise based APIs? 
+--- To avoid callback hell. 
+
+How to use this method?
+
+Context: Converting JSON web token verify method to send a promise. 'jwt.verify()' accepts 3 parameters: token, secretkey & callback function. The callback function will return an error & decoded. Decoded is the payload/data inside the JSON web token.
+
+const util = require('util'); --OR-- { promisify } = require('util');
+const jwt = require('jsonwebtoken');
+
+const data = util.promisify(jwt.verify); --OR-- const data = promisify(jwt.verify)
+
+data(token, secretkey)
+  .then((err, decoded) => {
+  console.log(decoded);
+}).catch(err);
+
+///////////////////////////////
+// Checking if user still exist after JWT verification
+///////////////////////////////
+
+Possible situations where we will need this additional step:
+
+1. If the user was deleted while the user is still in possession of the token. They should be logged out even if they have the token.
+
+2. When someone stole somebody's token and the owner of the account changes the password, the person who stole the token must be logged out. 
+
+////////////////////////////////////////
+// Environments in Postman
+////////////////////////////////////////
+
+Environments are set of variables you can use in your Postman request. Examples are Development and Production environments.
+
+A good example of a useful variable is specifying a separate URL for development and production. For development, the URL is 'localhost:8000'. In production, the URL is the name of the website like 'natours.io/'. If we won't make use of this functionality to assign different URLs, we would need to manual change the URL of each routes.
+
+ex: Variable: URL, Initial Value: localhost:8000
+
+In address bar, instead of 'localhost:8000/api/v1/tours/', we will add the variable: '{{URL}}api/v1/tours/'
+
+////////////////////////////////////////
+// Automatically add the JWT token into the authentication header
+////////////////////////////////////////
+
+We will write a code to automate the token input to the authentication header. This will let us create a new environment variable thru coding.
+
+1. In the 'sign up' and 'login' routes, we will go to 'test'. This is found near the header & body tabs. 
+
+2. In the right side of the window, click on 'Set an environment variable'. This will create a new template 'pm.environment.set("variable_key", "variable_value");'
+
+3. 'variable_key' is the environment variable and it will accept a STRING. We will use "jwt" or anything you fancy. 'variable_value' is 'pm.response.json().token' 
+  -- 'pm' is postman
+  -- 'json()' will convert the response to json
+  -- 'token' is the key in the json object. 
+
+4. In the protected routes, we will go to the 'Authentication' tab. In the drop down list, look for 'Bearer Token'. In the 'Token' field, type in our token variable, {{jwt}}.
+
+////////////////////////////////////////
+// Authorization
+////////////////////////////////////////
+
+Authorization is the process of deciding whether the authenticated user is allowed to perform an action on a specific resource (Web API Resource) or not. 
+
+look for authController.restrictedTo() for more info
+
+////////////////////////////////////////
+// Nodemailer and Mailtrap (Lesson 135)
+////////////////////////////////////////
+
+Nodemailer is a module in nodejs that can let us send email thru an email service (gmail, yahoo, hotmail, etc).
+
+Mailtrap is a service for the safe testing of emails sent from the development and staging environments. Mailtrap catches your emails in a virtual inbox so that you can test and optimize your email campaigns before sending them to real users.  
+
+
+////////////////////////////////////////
+// JWT and cookies
+////////////////////////////////////////
+
+A cookie is small piece of text that the server sends to the client. The client saves that cookie and sends it back to the server along with other future request to the same server. 
+
+Express.js has method for cookies
+
+'res.cookie(name, value [, options])'
+
+'name' can be anything
+'value' is what's inside the cookie. It's typically the JWT.
+'options' is an object. Example of options are 'expires', 'secure', 'httpOnly'
+
+'expires' accepts javascript data.
+'secure' accepts a boolean. If true, the cookie will be sent only thru https.
+'httpOnly' accepts a boolean. If true, this will prevent the client's browser from modifying the cookie. This will also preven cross site scripting attacks.
+
+You add this code before the response.status().json()
+
+http://expressjs.com/en/5x/api.html#res.cookie
+
+////////////////////////////////////////
+// Cross Site Scripting Attack
+////////////////////////////////////////
+
+https://www.npmjs.com/package/xss-clean
+
+It is a security vunerability that enables attackers to insert client-side scripts into a webpage that accepts user input. The webpage and the script will be saved in the database and if other users will access the webpage, this will run the script and do unspeakable horrors on other users' machines. 
+
+How to prevent this:
+
+1. Sanitize user inputs. 
+  -- There are packages like 'sanitize-html' or 'xss-clean'
+2. Use 'textContent' and NOT 'innerHTML' in DOM manipulation
+3. Use trusted 3rd party packages in your projects
+  -- You can run a security audit of your packages 'npm-audit' 
+4. In Express.js -> res.cookies() -> enable 'httpsOnly' option
+5. Mongoose validation will block data that doesn't conform to the validators.
+
+And other methods that I'm currently unaware of.
+
+////////////////////////////////////////
+// cookie VS localStorage VS sessionStorage
+////////////////////////////////////////
+
+Here's a good video: https://www.youtube.com/watch?v=GihQAC1I39Q
+
+Please note that different browsers will have different cookies/localStorage/sessionStorage.
+
+cookie
+  capacity: 4 kilobit
+  Browser: HTML4/HTML5
+  Accessible from: Any window
+  Expires: Manually set
+  Storage location: Browser & server
+  Sent with request: yes
+
+  Oldest of the three and commonly used on authentication.
+
+localStorage
+  capacity: 10 megabit
+  Browser: HTML5
+  Accessible from: Any window
+  Expires: Never
+  Storage location: Browser only
+  Sent with request: no
+
+  Commonly used along with sessionStorage. Data on localStorage will persist even if the browser was closed.
+
+sessionStorage
+  capacity: 5 megabit
+  Browser: HTML5
+  Accessible from: Same tab
+  Expires: On tab close
+  Storage location: Browser only
+  Sent with request: no  
+
+  Commonly used along with localStorage. 
+
+////////////////////////////////////////
+// Express Rate Limit
+////////////////////////////////////////
+
+https://www.npmjs.com/package/express-rate-limit
+
+'npm i express-rate-limit'
+
+This is a module that will prevent Denial of service or brute force attacks.
+
+This is usually implemented at app.js and near the start of the middleware stack since the function it creates is a middleware itself. After setting up the function and adding the options, you will add it in the middleware stack using 'app.use()'. 
+
+You can create several limiter functions for different routes or just create one for the entire API. This would protect any webpage of your app from denial of service attacks or the log in page from brute force attacks.
+
+////////////////////////////////////////
+// Securing your headers with Helmet
+////////////////////////////////////////
+
+https://www.npmjs.com/package/helmet
+
+Helmet modifies and hides some of the header from the client for security reasons. 
+
+////////////////////////////////////////
+// NoSQL query injection 
+////////////////////////////////////////
+
+https://www.npmjs.com/package/express-mongo-sanitize
+
+You can login using a mongoDB query and the correct password. Try this in the username: '{ "$gt": "" }'
+
+This works because the query will always be true. The only protection you have against this attack is if the attacker can't guess your password or you sanitize the data coming from the client.
+
+We will use the module 'express-mongo-sanitize', which will remove the query operators '$' and '.' from the req.body, req.params and req.query. 
+
+Just import the module to the file and use 'app.use(mongoSanitize())'
+
+////////////////////////////////////////
+// HTTP parameter pollution
+////////////////////////////////////////
+
+Here's a good video on this: https://www.youtube.com/watch?v=QVZBl8yxVX0
+
+HPP occurs when you add 2 same query parameter in the URL. For example:
+
+localhost:8000/api/v1/tours/?sort=duration&sort=price
+
+There's 'sort=duration' & 'sort=price'. What will express.js do with this?
+
+Different servers will return different results for this type of situations. 
+
+Express will return an array: [duration, price]
+
+Other servers will return either the first or the last.
+
+Now, an attacker can exploit this problem. One way to sort of solve this problem is by using another package 'hpp'
+
+'hpp' will use the last element of the array. Attackers can still exploit this but at least it's not returning an array.
+
+----> Whitelisting parameters that really needs to return an array
+
+Here's the syntax: 
+
+app.use(hpp({ whitelist: ['parameter'] }));
+
+////////////////////////////////////////
+// Adding Geospatial data Mongoose
+////////////////////////////////////////
+
+Location can be added to the MongoDB by adding latitudes and longitudes. This can be accomplished thru adding a embedded object in our model called GEOJSON.
+
+https://geojson.org/
+
+In order to specify geospatial data in mongoDB, we need to create a new object in our model. This new object should have at least 2 field names: 'coordinates' & 'type'. 'startLocation' is the field name. 'address' & 'description' are additional sub fields that we want. As we can see, neither are required.
+
+startLocation: {
+      type: {
+        type: String,
+        default: 'point',
+        enum: ['point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String
+    }
+
+Each of the 3 sub fields can accept the usual schematype options
+
+Regarding the sub field 'type', we can use it as a sub field and it does not currently function as a schematype option in the code above. If it's not inside an object, then mongoose will consider it as a schematype option. 
+
+Regarding 'coordinates', longitude is the first element and latitude is the second element. 
+
+////////////////////////////////////////
+// Creating embedded Documents in Schema
+////////////////////////////////////////
+
+We can specify in mongoose if we want to create documents inside a field by wrapping the GEOJSON inside an array.
+
+locations: [
+      {
+        type: {
+          type: String,
+          default: 'point',
+          enum: ['point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+      },
+    ]
+
+////////////////////////////////////////
+// Promise.all() method
+////////////////////////////////////////
+
+The Promise.all() method takes an iterable of promises as an input, and returns a single Promise that resolves to an array of the results of the input promises. 
+
+This method is an async method so...we need to do another async/await in the scope of Promise.all()
+
+////////////////////////////////////////
+// Connecting 2 different collections using Embedding
+////////////////////////////////////////
+
+Rather than using child or parent referencing, we can embed a document in another document for easy access.
+
+We first need to create a new field in the schema that will accept the '_id' of the documents of another collection that we want to embed.  
+
+In tour schema, we'll create 'guides' field with the data type of 'Array'.
+
+Next, we'll add a pre-save hook that will use '.find()' to query the '_id' we pass thru our request. 
+
+tourSchema.pre('save', async function (next){
+  this.guides = await User.find({ _id: { $in: this.guides } });
+  next();
+});
+
+Creating a new tour will run that pre-save hook middleware and the documents from the User collection will be saved inside the guides field. 
+
+////////////////////////////////////////
+// Connecting 2 different collections using Referencing
+////////////////////////////////////////
+
+We first need to create a new field in the schema, 'guides'.
+
+guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      }
+    ]
+
+Note that 'User' in ref is a string, so we don't need to import 'User' for this to work.
+
+Next, in the tourController.js, we will add the '.populate()' method in the query of the route that will find a single tour, getSingleTour. 
+
+const singleTour = await Tour.Tour.findById(req.params.id).populate('guides');
+
+.populate() will change the '_id' we added in the guides array into full documents when we do a query in the getSingleTour route.
+
+https://mongoosejs.com/docs/populate.html
+
+.populate() can accept options inside an object:
+
+'path' is the name of the field we want to replace. It is also the default option if we add a string in the populate parameter. 
+
+'select' will let you exclude fields. The value it accepts is a string. The syntax for excluding multiple fields is: '-fieldName1 -fieldName2 -fieldName3...'
+
+We don't want to show '__v' & 'passwordChangedAt' fields when we do single tour request. 
+
+const singleTour = await Tour.Tour.findById(req.params.id).populate({
+  path: 'guides',
+  select: '-__v -passwordChangedAt',
+});
+
+////////////////////////////////////////
+// Using populate() in a document query middleware
+////////////////////////////////////////
+
+While we could add the populate method on every mongoose query we have, it would be easier to create a document middleware.
+
+The middleware is a pre-find hook. You can also chain multiple .populate() methods if you need to get access to different collections. Just remember that each populate method will run a query on their respective collections, which will slow down your app.
+
+reviewSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'user',
+    select: 'name photo',
+  }).populate({
+    path: 'tour',
+    select: '-guides name',
+  });
+  next();
+});
+
+Please note that all the .populate() will run regardless if it's in different models. Use this method sparingly.
+
+////////////////////////////////////////
+// Virtual Populate
+////////////////////////////////////////
+
+We already specified a tour id and an user id for 1 review. And we can access the tour and user info using populate. But tour or user has no access to the reviews they are connected to. A possible solution is to have tour or user create it's array of review ids. But that would make the array grow without bound. A better solution is virtual populate.
+
+Like virtual fields, virtual populate will create an instanced field on the model and it will do magic stuff to connect collection 1 to collection 2. We also need to add .populate() in the mongoose query in the route handler of your choice.
+
+In tourModel.js:
+
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
+-- 'reviews' is a placeholder for the virtual field
+-- ref: 'Review' will tell mongoose that it needs to check the Review Model
+-- foreignField: 'tour' is the field in the Review Model that mongoose needs to look for
+-- localField: '_id' is the field in the Tour model that should have the same value with the 'tour' field in the Review Model
+
+
+In tourController.js, in getSingleTour route:
+
+const singleTour = await Tour.Tour.findById(req.params.id).populate('reviews');
+
+-- 'reviews' is the virtual field we created in the virtual populate part in tourModel.js
+
+////////////////////////////////////////
+// Nested Routes
+////////////////////////////////////////
+
+localhost:8000/api/v1/tours/6007271dc0e53e2eaa7024ab/reviews
+
+Notice the parent child relationship of tour->reviews. 
+
+Since the route starts in the tours, we need to add a middleware in tourRoutes.js:
+
+router.use('/:tourId/reviews', require('./reviewRoutes'))
+
+This will tell tourRoutes.js that any request that starts with the '/:tourId/reviews' route will be redirected to reviewRoutes.js.
+
+A problem with this is that reviewRoutes doesn't have access to the param :tourId. We can fix this by adding an option in express.Router() of reviewRoutes called 'mergeParams'. By default, it's false.
+
+const router = express.Router({
+  mergeParams: true,
+});
+
+http://expressjs.com/en/5x/api.html#express.router
+
+////////////////////////////////////////
+// Adding a middleware using express.Router()
+////////////////////////////////////////
+
+express.Router() is a mini-app that we can use to add middlewares to cover an entire list of routes
+
+const router = express.Router();
+router.use(authController.protect);
+
+All routers after 'router.use(authController.protect)' will have the 'authController.protect'.
+
+////////////////////////////////////////
+// Adding Indexes
+////////////////////////////////////////
+
+Indexes is a mongoDB functionality that creates a list of documents that are grouped for faster querying. If we don't use indexes, mongoDB will search all the documents. This will significantly slow down our app. 
+
+We can create indexes on specific fields in a collection. MongoDB, by default, creates the '_id' index. We can let mongoDB search thru this index instead of searching thru all the documents.
+
+/// Single Field Index
+
+We want to create an index for the 'price' field. 
+
+In the tourModel.js, after declaring the schema:
+
+tourSchema.index({ price: 1 });
+
+'1' means that we are sorting the price index in an ascending order
+
+'-1' means that we are sorting it in a descending order.
+
+You can check the existing indexes in compass in the 'indexes' tab.
+
+Please note that we can also create indexes by specifying schema type option 'unique' to true.
+
+/// Compound Field Index
+
+If we need to query more than 1 field, it would be better to create a compound field index.
+
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+
+Doing a query for the price field only or the ratingsAverage field only will work with compound field index 
+
+/// When to index a field
+
+Considerations must be made before creating an index/es for a field/fields. If the collection is frequently updated, it is not wise to create an index since every update of the collection would require mongoDB to update the index as well.
+
+When we really need to create an index, we must choose the field/s that are most likely to be queried. We can't create indexes for all the fields. That would defeat the purpose of creating indexes.
+
+////////////////////////////////
+// Using static methods
+////////////////////////////////
+
+Almost the same with instanced methods. The difference is that the 'this' keyword in static methods will refer to the model and not to the document. This is useful when we need to run CRUD operators or .aggregate().
+
+We want to get the average of all the review ratings in one tour as well as the total number of reviews that tour has. And we will update the ratingsAverage and ratingsQuantity in the Tour:
+
+reviewSchema.statics.calcAverageRatings = async function (tourId){
+  const stats = await this.aggregate([
+    {
+      $match: { tour: tourId },
+    },
+    {
+      $group: {
+        _id: '$tour',
+        numRating: { $sum: 1 },
+        avgRating: { $avg: '$rating' },
+      },
+    }
+  ]);
+  console.log(stats);
+
+  await Tour.Tour.findByIdAndUpdate(tourId, {
+    ratingsAverage: stats[0].avgRating,
+    ratingsQuantity: stats[0].numRating,
+  });
+};
+
+reviewSchema.post('save', function(){
+  // 'this' refers to the document
+  this.constructor.calcAverageRatings(this.tour);
+});
+
+// We created the static method and a post save middleware to run that static method. While we would normally run the static method as:
+
+'Review.calcAverageRatings(this.tour)'
+
+'Review' is still not yet defined. We can't add the middleware after 'Review' was defined because the middleware will not be included in reviewSchema.
+
+A work around is using 'this.constructor', which is equivalent to the model.
+
+Adding a review for a tour will trigger the middleware with '.calcAverageRatings()', which will return an array with one object that will contain numRating and avgRating. Adding additional reviews will update the numRating and avgRating.
+
+We then use findByIdAndUpdate to change the tour document.
+
+////////////////////////////////////////
+// Doing Geospatial Queries
+////////////////////////////////////////
+
+Pretty much the same mongodb operator for geospatial queries. We will use a Collection.find() method.
+
+The difference is that we will use several new operators. In the code below, we need to access the 'startLocation' field in the Tour documents.
+
+const { distance, latlong, unit } = req.params;
+const [lat, long] = latlong.split(',');
+const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+const tour = Tour.Tour.find({
+  startLocation: { $geoWithin: { $centerSphere: [[long, lat], radius] } }
+})
+
+the 'radius' variable will accept 'radians'. Radians is the distance we want to query divided by 3963.2 if we are using miles or 6378.1 if we are using kilometers.
+
+Now we need to create a new index for startLocation. Instead of 1 or -1, the value we will use a string '2dsphere'.
+
+///////////////////////////////////
+// Getting the distance from user-specified latlong to nearest tour
+///////////////////////////////////
+
+This is almost the same with doing geospatial queries. We only need to provide the latlong where we will search for the nearest tour and the unit (miles or kilometers).
+
+async (req, res, next) => {
+  const { distance, latlong, unit } = req.params;
+  const [lat, long] = latlong.split(',');
+
+  const distance = await Tour.Tour.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [long * 1, lat * 1],
+        },
+        distanceField: 'distance',
+        distanceMultiplier: 0.001,
+      },
+    },
+    {
+      $project: {
+        distance: 1,
+        startLocation: 1,
+        name: 1,
+      },
+    }
+  ]);
+}
+
+// $geoNear is the first stage of our aggregation pipeline. $geoNear also requires at least one of our fields to have a geospatial index. And since we already have startLocation: '2dsphere', $geoNear will use that index to perform the calculation in determining the distance from our specfied latlong to the nearest tour. 
+
+// if we have multiple '2d' or '2dsphere' indexes, we must use 'key' to specify what index we want to use.
+
+// if 'key' was not specified, mongoDB will look for '2d' indexes first and then '2dsphere'.
+
+https://docs.mongodb.com/manual/reference/operator/aggregation/geoNear/
+
+// $geoNear has a property called 'near' that accepts a geoJSON. 'near' is the point from which to calculate the distances. 
+
+// another property is 'distanceField'. It accepts a string which will contain the result of the calculation. The result is in meters. We need to divide it by 1000 for kilometers.
+
+// 'distanceMultiplier' will accepts a number that will be multiplied to the 'distanceField'.
+
+////////////////////////////////////////
+// Adding Template Engines
+////////////////////////////////////////
+
+http://expressjs.com/en/guide/using-template-engines.html#using-template-engines-with-express
+
+We will be using pug for this project. In app.js, we wil add this code after we declare all modules/packages that we will import to our code:
+
+app.set('view engine', 'pug');
+
+Express supports pug and we don't need to import anything. But we need to install pug! --> 'npm i pug'a
+
+Next, we need to create a new folder 'views', which is part of MVC arch. Before we add the code to connect the views folder, we will require another module, 'path'.
+
+const path = require('path');
+
+And here's add another line of code:
+
+app.set('views', path.join(__dirname, views));
+
+'path' is a built in module in express that manipulates pathnames. The code above means that there will be a path joining the directory name /views.
+
+While it might seem too much to use 'path' in this case, we don't know if a path that we receive from somewhere already has a slash or not. This code will prevent this kind of bugs. We don't have to worry about the '/' because node will do everything for us. 
+
+///////////////////////////////////
+// Rendering Templates
+///////////////////////////////////
+
+http://expressjs.com/en/guide/using-template-engines.html#using-template-engines-with-express
+
+We need to create a new pug file in the views folder, base.pug
+
+Next, we need a new route. Instead of app.use, we will use app.get(), which is used to rendering pages in a browser. 
+
+We need to add this code before the tour, user & review routes so that this becomes the root of our website:
+
+app.get('/', (req, res) => {
+  res.status(200).render('base');
+});
+
+Express knows where 'base' is located. We don't need to specify the path.
+
+/////////////////////////////////////
+// Using pug as a template engine
+/////////////////////////////////////
+
+pug uses whitespaces and/or tabs instead of opening and closing html tags. When using html tags with attributes, such as the 'link' tag, the attributes are placed inside a parenthesis. Only single quotation marks are allowed in pug.
+
+Here's an example code:
+
+doctype html
+html
+    head
+        title Natours | #{tour}
+        link(rel='stylesheet' href='css/style.css')
+        link(rel='shortcut icon' type='image/png' href='img/favicon.png')
+
+    body
+        h1= tour
+        //-h1 Hey!!!
+        h2= user.toUpperCase()
+        p Just a sample sentence
+        - const x = 9;
+        h1= 5 * x
+
+The whitespaces will tell you what the parents and children are. As for why 'css/style.css' & 'img/favicon.png' works, it's because we have a code in app.js that tells node that all static files are located in the 'public' folder.
+
+// Comments
+
+There are 2 ways to add comments in pug. First is thru '//'. Second is thru '//-'. The first one will show the comment out code in the dev tools. The second will NOT show the code in the dev tool
+
+// Adding javascript code
+
+Buffered codes are codes that will show in the output/template/html. Buffered code starts with '='. We can use javascript to manipulate these buffered codes. 
+
+Example:
+
+h1= user.toUpperCase()
+
+user is 'Me' and will be shown as 'ME' in the html. Please note that there is no semi-colon after the code. Adding a semi-colon will return an error. 
+
+Unbuffered codes are the codes that will not appear in the output.  These codes starts with '-'. We can declare variables, run loops, etc.
+
+Example:
+
+- const x = 9;
+h1= 5 * x
+
+'45' will appear in the html. All the code works like javascript which means that we can't declare variable after calling that variable.
+
+Another way to add data and javascript code is thru interpolation. It's basically template strings written in a different way.
+
+'#{}'
+
+You can escape interpolation by adding a backslash before the interpolation 
+
+Example:
+
+'\${sample}' will appear as '${sample}'
+
+Another way to escape interpolation is thru another interpolation:
+
+Example:
+
+${'${sample}'} will appears as ${sample}
+
+// Using ':' to combine 2 lines of code
+
+Instead of:
+
+ul
+  li Sample text
+
+We can turn it into a single line 'ul: li Sample text'
+
+////////////////////////////////////
+// Connecting 2 pug files
+////////////////////////////////////
+
+We can import a pug file to another pug file by adding 'include' and the filename of the pug file to the parent pug file. You may or may not include the .pug at the end of the filename.
+
+include filename.pug
+
+The child pug file doesn't need any code to export its contents.
+
+////////////////////////////////////
+// Connecting 1 parent pug file to several children pug files
+////////////////////////////////////
+
+We can do this by using block/extends
+
+In the parent pug file, we will specify where on the code we will insert the child pug file. We can do this by adding 'block' and then any placeholder. Any code under this block will appear if the endpoint for the parent pug file is called.
+
+block sample
+  h1 This is the parent pug file
+
+Then in the children pug files, we will add the code:
+
+extends parentPugFile
+
+block sample
+    h1 This page is for the child pug file # 1
+
+If we run the end point for this child pug file, the text 'This page is for the child pug file # 1' will appear instead of 'This is the parent pug file'.
+
+Creating different child pug files with different templates are usually the use case. 
+
+As to why calling the children pug files in app.get() will include the parent pug file, from what I understand, it is that everything in the parent pug file except what's inside its own block will be copied to the child pug file. 
+
+Local variables depending on what were declared in the endpoint will also be applied.
+
+/////////////////////////////////////
+// Adding additional code in block using append or prepend
+/////////////////////////////////////
+
+When we extend a block, all the contents of the block in the parent template(base.pug) will be replaced by the contents of the block in the child template(tour.pug). If we don't want to replace all the code in the block and we just want to add code before or after the code in the block, we'll use 'block append' (at the beginning of the code) or 'block prepend' (at the end of the code). 
+
+/////////////////////////////////////
+// Looping in Pug
+/////////////////////////////////////
+
+There are 2 ways to iterate in Pug, each and while
+
+'each' syntax:
+
+each variable1, variable2 in Object/Array
+
+-- variable1 is the current element in the loops
+-- variable2 is the index of the current element. Any second variable will provide the index by default
+-- Object/Array is what we will iterate thru.
+
+///////////////////////////////////////
+// Interpolation of CSS classes or ids
+///////////////////////////////////////
+
+While we can't use ${} or #{} in css classes or ids, we can create a class attribute that will contain the template string we want.
+
+Let's say we want to change '1' into 2,3,4... for every iteration
+
+img.picture-box__img.picture-box__img--1
+
+--- will turn into:
+
+img.picture-box__img class=`picture-box__img--${index + 1}`
+
+
+//////////////////////////////////////
+// Mapbox
+//////////////////////////////////////
+
+Mapbox is a library that adds a map in your website. Implementing Mapbox in your website is straightforward. You just need to go their website and copy their code. The HTML code goes to your HTML header. The JS code goes to your JS code that will handle everything regarding Mapbox. 
+
+Here's an example of the JS part of the code:
+
+mapboxgl.accessToken = 'pk.eyJ1IjoibGlsb2tpZTEyIiwiYSI6ImNrbDNnaW9lOTA0YzUybm4xdm00dXR6c20ifQ.IAEMS8teAMb8wroY2eTBoA';
+
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/lilokie12/ckl43a105305d17pm6uyox6bi'
+});
+
+-- The accessToken can be the default token that Mapbox will provide or another token you'd make that is specifically made for your project.
+
+-- The value in property 'container' is the HTML element or the element's string id that we will use in our html code. If we use '#map' in a section / div, it will show up in that section / div. The section / div must not have any children.
+
+-- 'style' is the styling of the map. You can choose different styling in Mapbox. After choose the style that you want, Mapbox will provide a link of code that starts with 'mapbox://styles/...'
+
+-- 'mapboxgl.Map({})' can accept other options. Please check the documentation for more info:
+
+https://docs.mapbox.com/mapbox-gl-js/api/map/
+
+// Other Options:
+
+-- 'center' accepts an array. The first element is the longitude and the second is the latitude. Everytime a map loads, the map's center will be the coordinate that we specified. 'center' is more noticeable if we add the 'zoom' option
+
+-- 'zoom' accepts a number. The default is 0 (zoom out). I think 20 is zoomed in enough to see the street name. 10 is fine.
+
+-- 'interactive' accept a boolean. Setting it to 'false' will disable the control in the map, turning the map into a static image.
+
+//////////////////////////////////
+// How to create bounds with all the tour locations in it
+//////////////////////////////////
+
+What the hell are bounds to begin with? Bounds represents a rectangular area in pixel coordinates. For it to work, we need to tell the map to all the locations of a tour. We will also add markers to each location.
+
+
+const bound = new mapboxgl.LngLatBounds();
+
+location1.forEach(el => {
+  // create marker
+  const newElement = document.createElement('div');
+  newElement.className = 'marker';
+
+  // Add Marker
+  new mapboxgl.Marker({
+    element: newElement,
+    anchor: 'bottom',
+  }).setLngLat(el.coordinates).addTo(map);
+
+  // Extend map bound to include current locations
+  bound.extend(el.coordinates);
+});
+
+map.fitBounds(bound, {
+  padding: {
+    top: 200,
+    bottom: 200,
+    left: 100,
+    right: 100,
+  }
+});
+
+We will create a variable that contains 'new mapboxgl.LatLngBounds()'
+
+https://docs.mapbox.com/mapbox-gl-js/api/geography/#lnglatbounds
+
+Next, we will loop thru the locations using forEach. Inside the forEach, we will create a new div element and we will add a new class 'marker' to that div element, which will be use as the marker for each locations. 
+
+Then we will add a marker per location. 'mapboxgl.Marker' 
+
+https://docs.mapbox.com/mapbox-gl-js/api/markers
+
+We will use the parameters 'element' and 'anchor'. 'element' is the variable name of the div we created earlier. 'anchor' is a string indicating the part of the Marker that should be positioned closest to the coordinate. We will use 'bottom' for this one. 
+
+'mapboxgl.Marker' has its own methods. We will use '.setLngLat()' & '.addTo()'
+
+'.setLngLat()' accepts an array. Mapbox expects us to receive the coordinates of each tour, which in this case is 'el.coordinates'.
+
+'.addTo()' accepts the variable name that contains 'mapboxgl.Map'. In this case, it's 'map'.
+
+Now that the markers are connected to the locations, we need to tell Mapbox to extend the bounds to show all the tour locations
+
+https://docs.mapbox.com/mapbox-gl-js/api/geography/#lnglatbounds#extend
+
+'mapboxgl.LngLatBounds().extend' accepts an object. It looks like iterating arrays will work.
+
+If we want to adjust the zoom or padding of the bounds, we'll use 'map.fitBounds()'
+
+'map.fitBounds()' accepts 'bounds' as the first parameter and an object for the padding. 
+
+https://docs.mapbox.com/mapbox-gl-js/api/map/#map#fitbounds
+
+
+//////////////////////////////////////////
+// CSP and CORS, making sense of it all
+//////////////////////////////////////////
+
+I haven't figured out why the code I added worked, specifically in the directives for the CSP but here's the code anyway:
+
+In app.js, we will modify helmetjs to edit the Content Security Policy.
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'", 'https:', 'http:', 'data:', 'ws:'],
+      baseUri: ["'self'"],
+      fontSrc: ["'self'", 'https:', 'http:', 'data:'],
+      scriptSrc: ["'self'", 'https:', 'http:', 'blob:'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https:', 'http:'],
+    },
+  })
+);
+
+For mapbox to work, we will add another CSP code in viewController.getTour in the res part of the code. After .status() & before .render(), we'll add this:
+
+.set(
+      'Content-Security-Policy',
+      "default-src 'self' https://*.mapbox.com https://*.stripe.com ;base-uri 'self';block-all-mixed-content;font-src 'self' https: data:;frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src https://cdnjs.cloudflare.com https://api.mapbox.com https://js.stripe.com 'self' blob: ;script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests;"
+    )
+
+
+As for the CORS, we will import the CORS module from NPM (npm i cors) and import the module to app.js.
+
+We will add the middleware on the start of the middleware stack.
+
+app.use(cors({
+  origin: `127.0.0.1:${process.env.PORT}`,
+  credentials: true,
+}));
+
+
+
+
+
+
+// To do list
+
+1. Prevent anyone from registering as admin
+
+
+
+
+
+// DONE! 
+
+1. Update the handlerFactory.updateOne route into accepting another parameter (rest parameter) that will contain the fields that we will only accept in req.body
+
+--> use the filterObj() function in userController.js
+
+2. Create a new NODE_ENV with the value 'LOADER'. If NODE_ENV=LOADER, the middlewares for the password encryption will not run. 
+
+////////////////////////////////////////
+// Natours User Password
+////////////////////////////////////////
+
+The password for all accounts is test1234
+
+
+////////////////////////////////////////
+// Kill node 
+////////////////////////////////////////
+
+pkill -9 node
+
+////////////////////////////////////////
+// List of Errors and Possible causes
+////////////////////////////////////////
+
+[ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+
+-- There are probably 2 'next()'

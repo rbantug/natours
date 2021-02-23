@@ -1,0 +1,213 @@
+///////////////////////////////////////////
+// Git & Github
+///////////////////////////////////////////
+
+Git is a free and open source version control system. 
+
+Version control system is the management of changes to documents, computer programs, large websites and other collection of information. It is a way for programmers to keep track of code changes. It stores the history of code changes and it gives us the ability to revert back to previous versions of our code.
+
+Github is a website where you host your git repository (folders/projects). You can share your files with other people in github. 
+
+// Git Commands
+
+clone 
+  -- Bring/download a repository that is hosted somewhere (ex: Github) to your local machine.
+
+add
+  -- Tell git to track code changes in your file. 
+
+commit 
+  -- save your file in git
+
+push 
+  -- upload your file to a remote repository (ex: Github)
+
+pull
+  -- download a file from a remote repository (ex: Github)
+
+// What is README.md 
+
+It's a file that contains the description of the project. What it does and other relevant information
+
+'.md' means mark down
+
+Here's a website on how to use mark down syntax:
+
+https://www.markdownguide.org/basic-syntax#overview
+
+// Committing a new file in Github
+
+When committing a file in github, there are options below the page near the 'commit new file' button to add the title of the current version and a description of what the version is all about. It is advisable to add as much info as possible for the benefit of other users and your future self (lol).
+
+// Getting your SSH key
+
+In your linux terminal, type:
+
+ssh-keygen -t rsa -b 4096 -C "github email address"
+
+You can type the filename that you desire. If you did not add a file name, the default is 'id_rsa'
+
+You will asked for a paraphrase (password)
+
+After creating the SSH, check the folder where you SSH key was stored and do a 'ls -la' to check the contents of the folder
+
+the one with '.pub' is the public key that you will share with github.
+
+to show the contents of 'id_rsa.pub', type: 'cat id_rsa.pub'
+
+// Adding your SSH key to a SSH agent 
+
+https://docs.github.com/en/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#adding-your-ssh-key-to-the-ssh-agent
+
+// Using git in your code editor (VScode)
+
+-- git clone
+
+  To download a repo from github, go to your github repository and click on clone or code and copy the https or SSH.
+
+  In VScode, type in the terminal: 'git clone https/SSH', https/SSH is what you copied from github
+
+Inside the repository you just downloaded, there is a hidden .git folder that will contain all the history of the changes we did on our code.
+
+On way to check all the contents of the repo is to type this command: 'ls -la'
+
+-- git status
+  This will show you what files were updates, changed or deleted but not yet saved in a commit yet.
+
+-- git add
+  When you create a new file, any changes to be made to that file will not be registered in git. Using 'git add filename' will tell git to track that file for changes. When you use 'git status', it will show the files that were updated and new files that not yet tracked. Using 'git add .' will track all the files when you did the 'git status'
+
+-- git commit
+  After running 'git add', type 'git status' again to check if everything is ready to be committed. Here's the syntax for the commit:
+
+  git commit -m "title" -m "description"
+
+  title and description is the same in github website when you'll commit a new file in the repo.
+
+  Please note that this will save our files LOCALLY. It will not show up in github.
+
+-- git commit -am 
+  If you need to add and commit one file at the same time, here's a short hand for that. Just make sure that you already did a 'git add' in that file. The file should be 'modified' when you do 'git status' and not newly created file.
+
+-- git config
+  When I first tried to do a commit, git has no info about me. So here's the syntax to be used to login your account:
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+  Omit --global to set the identity only in this repository.
+
+-- git push
+  We need to add 2 arguments, 'origin' & 'main'. 'origin' is the location of our git repo and 'main' is branch we want to push to.
+
+  While this did not work in my linux machine because for some reason, I can't login into github, I tried 'Git: Push' in the command palette and it worked.
+
+  A solution is to rename the branch name in github. I changed the 'main' to 'main1' for test-repo and 'main' to 'main2' for test-repo2. 
+
+  So when I need to push, I'll just specify main1 or main2.
+
+-- git init
+  When we have a local folder that is not yet tracked by git, we will run 'git init' in the terminal under the local folder's path
+
+-- git merge master/main
+
+  TLDR: When using this command, your feature branch will get up to date with the code from the main/master branch. Don't use this to merge your feature branch to the main/master branch. Do a pull request.
+
+  We don't usually use this command. Many users will be merging their feature branch to the main/master branch and this will make the code in your feature branch immediately outdated. If you get too far behind the master/main branch in github, you might have problems when you merge your branch later. 
+
+-- git reset
+  
+  Check the section 'Undoing Git'
+
+-- git log
+
+  This will show you your previous commits. It is helpful when doing a reset to more older commits. Check the section 'Undoing Git'
+
+// How to add a repo from your local machine to github
+
+Do a 'git init'
+
+After doing 'git init', we will run 'git status' to check what files are not yet tracked by git. Do a 'git add .' or 'git add filename'. 
+
+Do a commit
+
+'git push origin main' will not work because github doesn't know where to place this new repo. A solution is to create a new repo and copy the SSH code from the new repo
+
+In the VScode terminal, type in: 'git remote add origin SSHCode'
+
+'remote' means to add a reference to a remote repository on github.
+
+type in 'git remote -v' to show any remote repository that connected to this repo. 
+
+// Branches
+
+Just like a tree, your main/master branch can branch into several branches (lol). These branches can merge to the main/master branch eventually. 
+
+To check if your repo has any branches, type 'git branch'. The one with '*' is the branch you are currently in.
+
+To create a new branch, type 'git checkout -b newbranchname'
+
+To switch between branches, type 'git checkout switchToBranch'
+
+If you switch between branches, you will immediately notices changes in the files in branch. 
+
+Before merging 2 branches LOCALLY, you first need to check the difference in the files saved in those 2 branches.
+
+type: 'git diff branchToCompare'
+
+In the terminal, the green text with the '+' means those text were added or the red text with the '-' sign means those text were removed.
+
+You can then use: 'git merge branchToMerge', but another way to do this is to switch to the branch that we want to merge with and make a pull request.
+
+use 'git status' if there is nothing new to commit. Then use 'git push -u origin currentBranch/remoteBranch'. 'remoteBranch' being the branch that we will merge to the main/master branch. Notice that your remoteBranch/feature branch's commit will be updated in github.
+  
+  '-u' is a shorthand for '--set-upstream-to' or '--set-upstream'. We use this if we create a branch LOCALLY on our machine and github has no idea where to add this branch if we want to push it because that branch does not exist in github.
+
+After this, we will do a PR or pull request. After request for a PR, someone (assuming that you are in a team) will review your code before 
+
+A pull request is a request to have your code in the feature branch pulled to main/master branch. After making a PR, anyone (in your team) can review your code. You can still edit your code after making a PR by doing additional commits and pushing them to github. Once the PR is merged, you need to delete your feature branch and switch back to the master/main branch. If you need to additional coding changes, you'll need to create another branch. This will follow the same process of making commits, PR and merging to the main/master branch.
+
+To make a pull request, go to github and click on the pull request tab on the top. Below the pull request tab, click on the 'compare & pull request'
+
+Check the 'compare' & 'main' branch. 
+
+In the description, you'd usually type the changes you made in your feature branch and why you made those changes.
+
+After your feature branch get merged to the main/master branch, you need to do a 'git pull' to get the files in your machine up to date since the merging was only done in github and not LOCALLY. 
+
+If a upstream was already established for the main/master branch, you can just run 'git pull'. If not, run 'git pull origin main/master'
+
+You usually have to delete the merged branch. To do that, run 'git branch -d featureBranch'. This will LOCALLY delete the branch. Github will still show that branch.
+
+// Merge Conflicts
+
+There will be problems when different users are updating the same file since github does know what lines of code to keep and disregard.
+
+First, switch to your feature branch and do a 'git merge main/master' to get your code up to date with main/master.
+
+You'll get an error about merge conflict in XXXfile. 
+
+Check the file and you'll see that VSCode will give you options to accept the current or incoming changes. OR you can just manually delete the code (usually your code) and save the file. Also, in the file explorer, there is a 'C' on filename with the conflict.
+
+Next, do a 'git status' and you'll see that you need to do a commit.
+
+// Undoing in Git
+
+When you want to undo staging/'git add' to a file, you can use 'git reset filename' to undo that 'git add' command. You can also use 'git reset' to undo all staged files.
+
+To undo a commit, you can use 'git reset HEAD~'
+
+  'HEAD' a pointer to your last commit
+  '~' is the previous commit. If you use '~1', it is the commit before your previous commit.
+
+  Let's say you did a commit, an add and another commit. Since git reverted to the 2nd to the last commit, the file was also unstaged (not added).
+
+To undo an older commit, we first need to get the hash of that commit by using 'git log'. And then use 'git reset hash' to revert to that commit. Doing this will not change your files/codes LOCALLY. The files/codes affected by reverting to an older commit are now unstaged and not commited in git. 
+
+To revert to an older commit AND delete the files/codes affected by the revert, use 'git reset --hard hash'
+
+// Forking
+
+Forking is simply getting a copy of somebody else's repository. Doing this will give you your own copy of the repository and it's codes. And you will complete control on that repo.
+
+If you want to incorporate your code into the original repository, you can do a pull request of your copy repo to the original repo.
