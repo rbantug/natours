@@ -159,6 +159,16 @@ tourSchema.virtual('reviews', {
   localField: '_id',
 });
 
+tourSchema.virtual('bookings', {
+  ref: 'Booking',
+  foreignField: 'tour',
+  localField: '_id'
+});
+
+/* tourSchema.virtual('bookingsTotal').get(function () {
+  return this.bookings.length;
+}); */
+
 //////////////////////////////////////
 // Document Middleware
 //////////////////////////////////////

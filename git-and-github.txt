@@ -47,7 +47,7 @@ ssh-keygen -t rsa -b 4096 -C "github email address"
 
 You can type the filename that you desire. If you did not add a file name, the default is 'id_rsa'
 
-You will asked for a paraphrase (password)
+You will be asked for a paraphrase (password)
 
 After creating the SSH, check the folder where you SSH key was stored and do a 'ls -la' to check the contents of the folder
 
@@ -211,3 +211,17 @@ To revert to an older commit AND delete the files/codes affected by the revert, 
 Forking is simply getting a copy of somebody else's repository. Doing this will give you your own copy of the repository and it's codes. And you will complete control on that repo.
 
 If you want to incorporate your code into the original repository, you can do a pull request of your copy repo to the original repo.
+
+///// Troubleshooting /////
+
+Error:
+
+sign_and_send_pubkey: signing failed for RSA "-----" from agent: agent refused operation
+git@github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Solution:
+
+Type in terminal: 'ssh-add'
+
+Enter paraphrase. Try doing a push.

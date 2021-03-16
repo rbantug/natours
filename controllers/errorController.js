@@ -23,34 +23,78 @@ const handleJWTInvalidSig = () =>
 const handleExpiredToken = () =>
   new AppError('Expired token. Please try to login again', 401);
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
-  });
-};
-
-const sendErrorProd = (err, res) => {
-  if (err.isOperational) {
-    // Operational, trusted error: we will send a message to the client
+const sendErrorDev = (err, req, res) => {
+  // API error
+  if (req.originalUrl.startsWith('/api')) {
     res.status(err.statusCode).json({
       status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  } /* else if (err.message === 'jwt expired') {
+    // Rendered Website Error
+    // For expired jwt. It will automatically delete the cookie.
+    console.error(`This is a programming error`, err);
+    res.clearCookie('jwt');
+    res.status(err.statusCode).render('errorTemplate', {
+      title: `Error ${err.statusCode}`,
+      message: err.message,
+    }); 
+  } */ else {
+    // Rendered Website Error
+    console.error(`This is a programming error`, err);
+    res.status(err.statusCode).render('errorTemplate', {
+      title: `Error ${err.statusCode}`,
       message: err.message,
     });
-  } else {
-    // Programming, unknown error: do not leak details to client
-
-    // send a log
-    console.error(`This is a programming error`, err);
-
-    // Simple message to client
-    res.status(500).json({
-      status: 'error',
-      message: 'Something went wrong',
-    });
   }
+};
+
+const sendErrorProd = (err, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    // API error
+    if (err.isOperational) {
+      // Operational, trusted error: we will send a message to the client
+      res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    } else {
+      // Programming, unknown error: do not leak details to client
+  
+      // send a log
+      console.error(`This is a programming error`, err);
+  
+      // Simple message to client
+      res.status(500).json({
+        status: 'error',
+        message: 'Something went wrong',
+      });
+    }
+  } else {
+    // Rendered Website Error
+      if (err.isOperational) {
+        // Operational, trusted error: we will send a message to the client
+        res.status(err.statusCode).render('errorTemplate', {
+          title: 'Something went wrong',
+          message: err.message,
+        });
+      } else {
+        // Programming, unknown error: do not leak details to client
+    
+        // send a log
+        console.error(`This is a programming error`, err);
+    
+        // Simple message to client
+        res.status(500).render('errorTemplate', {
+          title: 'Something went wrong',
+          message: 'Please try again later',
+        });
+      }
+
+  }
+    
 };
 
 module.exports = (err, req, res, next) => {
@@ -58,10 +102,11 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     // eslint-disable-next-line node/no-unsupported-features/es-syntax
-    let error = { ...err };
+    //let error = { ...err }; // This does not work. The error message is not showing up. 
+    let error = Object.assign(err);
 
     // For handling invalid _id when searching, updating or deleting documents
     if (err.name === 'CastError') error = handleCastErrorDB(err);
@@ -76,9 +121,12 @@ module.exports = (err, req, res, next) => {
     if (err.name === 'JsonWebTokenError') error = handleJWTInvalidSig();
 
     // For handling expired tokens
-    if (err.name === 'TokenExpiredError') error = handleExpiredToken();
+    if (err.name === 'TokenExpiredError') {
+      //res.clearCookie('jwt');
+      error = handleExpiredToken()
+    };
 
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res);
   }
 };
 
@@ -93,3 +141,5 @@ module.exports = (err, req, res, next) => {
 // regarding 'err.name' when handling errors, I can't find 'name' in the JSON object that mongoose sents to use in postman or in the console. But somehow it exist and I used that in the 'if' condition statement.
 
 // Regarding generating error messages for when a validator error occurs, the JSON object mongoose sents us has a 'message' field with all the error messages in it. We can use that (err.message) as a quick solution to display the errors but we can't customize the message.
+
+// 'req.originalUrl' is the URL without the host (127.0.0.1:8000). We need to check if client is accessing the API or the website so that we can specify what error we need to show them.

@@ -1,8 +1,68 @@
 /* eslint-disable node/no-unsupported-features/es-syntax */
+const multer = require('multer');
+const sharp = require('sharp');
 const Tour = require('../Models/tourModel');
 const catchAsyncErrors = require('../utils/catchAsyncErrors');
 const handlerFactory = require('./handlerFactory');
 const AppError = require('../utils/appError');
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb (new AppError('Only photos can be uploaded', 400), false);
+  }
+}
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+exports.uploadTourPhotos = upload.fields([
+  {name: 'imageCover', maxCount: 1},
+  {name: 'images', maxCount: 3}
+]);
+
+exports.processTourPhotos = catchAsyncErrors( async (req, res, next) => {
+  console.log(req.files);
+
+  if (!req.files.imageCover || !req.files.images) next();
+
+  req.body.imageCover = `tour-${req.params.id}-cover.jpeg`
+
+  await sharp(req.files.imageCover[0].buffer)
+  .resize(2000, 1333)
+  .toFormat('jpeg')
+  .jpeg({quality: 90})
+  .toFile(`public/img/tours/${req.body.imageCover}`);
+
+  // let imageFilename = `tour-${req.params.id}-${Date.now()}-image.jpeg`;
+
+  req.body.images = [];
+  
+  await Promise.all(req.files.images.map( async (el, i) => {
+    const imageFilename = `tour-${req.params.id}-image-${i + 1}.jpeg`;
+    await sharp(el.buffer)
+    .resize(2000, 1333)
+    .toFormat('jpeg')
+    .jpeg({quality: 90})
+    .toFile(`public/img/tours/${imageFilename}`); 
+
+    req.body.images.push(imageFilename);
+  }));
+  /* req.body.images = req.files.images.map(async (el) => {
+    await sharp(el.buffer)
+    .resize(2000, 1333)
+    .toFormat('jpeg')
+    .jpeg({quality: 90})
+    .toFile(`public/img/tours/${imageFilename}`);
+  }) */
+
+  next();
+});
 
 exports.aliasTopTour = (req, res, next) => {
   req.query.limit = '5';
@@ -14,8 +74,21 @@ exports.aliasTopTour = (req, res, next) => {
 exports.getAllTours = handlerFactory.getAll(Tour.Tour);
 exports.getSingleTour = handlerFactory.getOne(Tour.Tour, { path: 'reviews' });
 exports.createTour = handlerFactory.createOne(Tour.Tour);
-exports.updateTour = handlerFactory.updateOne(Tour.Tour);
+exports.updateTour = handlerFactory.updateOne(Tour.Tour, 'startLocation',
+'ratingsAverage',
+'ratingsQuantity',
+'startDates',
+'name',
+'duration',
+'maxGroupSize',
+'difficulty',
+'price',
+'summary',
+'imageCover',
+'images',
+'locations');
 exports.deleteTour = handlerFactory.deleteOne(Tour.Tour);
+exports.getBookingsPerTour = handlerFactory.getOne(Tour.Tour, 'bookings');
 
 exports.getTourStats = catchAsyncErrors(async (req, res, next) => {
   const stats = await Tour.Tour.aggregate([

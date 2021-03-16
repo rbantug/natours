@@ -44,6 +44,8 @@ router
 
 router.route('/tour-distance/:latlong/unit/:unit').get(tourController.getDistance);
 
+router.get('/getBookingsPerTour/:id', tourController.getBookingsPerTour);
+
 router
   .route('/')
   .get(tourController.getAllTours)
@@ -59,6 +61,8 @@ router
   .patch(
     authController.protect,
     authController.restrictedTo('admin', 'lead-guide'),
+    tourController.uploadTourPhotos,
+    tourController.processTourPhotos,
     tourController.updateTour
   )
   .delete(

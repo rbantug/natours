@@ -565,6 +565,8 @@ Nodemailer is a module in nodejs that can let us send email thru an email servic
 
 Mailtrap is a service for the safe testing of emails sent from the development and staging environments. Mailtrap catches your emails in a virtual inbox so that you can test and optimize your email campaigns before sending them to real users.  
 
+Go to 'Complex Email Handler (Lesson 205)' or search notes for 'Creating a complex email handler' for more info
+
 
 ////////////////////////////////////////
 // JWT and cookies
@@ -757,12 +759,18 @@ locations: [
     ]
 
 ////////////////////////////////////////
-// Promise.all() method
+// Fulfilling Multiple promises inside an array using Promise.all()
 ////////////////////////////////////////
 
 The Promise.all() method takes an iterable of promises as an input, and returns a single Promise that resolves to an array of the results of the input promises. 
 
 This method is an async method so...we need to do another async/await in the scope of Promise.all()
+
+// Use case
+  If we use an array.map() and the iteration will produce an array full of promises, we need to envelop the entire array.map() code inside 'await Promise.all()' so that the code will not continue to the next line and it will instead for all the promises in the array to be resolved.   
+
+  Why use .map() and not .forEach() ?
+    Because we need to save the promises somewhere. Using .map() will do that. Placing the .map() code inside the Promise.all() is a faster solution than creating another variable and placing that variable inside Promise.all()
 
 ////////////////////////////////////////
 // Connecting 2 different collections using Embedding
@@ -1370,6 +1378,391 @@ app.use(cors({
   credentials: true,
 }));
 
+And I added a chrome extension:
+
+https://chrome.google.com/webstore/detail/always-disable-content-se/ffelghdomoehpceihalcnbmnodohkibj?hl=en
+
+And another CSP:
+
+"default-src 'self' https://js.stripe.com/v3/ https://cdnjs.cloudflare.com https://api.mapbox.com; base-uri 'self'; block-all-mixed-content; connect-src 'self' https://js.stripe.com/v3/ https://cdnjs.cloudflare.com/ https://*.mapbox.com/; font-src 'self' https://fonts.google.com/ https: data:;frame-ancestors 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' https://js.stripe.com/v3/ https://cdnjs.cloudflare.com/ https://api.mapbox.com/ blob:; script-src-attr 'none'; style-src 'self' https: 'unsafe-inline'; upgrade-insecure-requests;"
+
+
+///////////////////////////////////
+// Parcel Bundler
+///////////////////////////////////
+
+npm i parcel-bundler@1.12.3 --save-dev
+
+In package.json, we will create 2 scripts:
+
+"watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js --public-url /js"
+
+"build:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js --public-url /js"
+
+Running 'parcel watch' will work but the bundle file will appear in some folder. We want to parcel to watch index.js. 
+
+'--out-dir ./public/js --out-file bundle.js' refers to the output directory and the file name of the output file.
+
+Running 'watch:js' will create a bundle.js file at the js folder. 
+
+
+//////////////////////////////////////
+// Multer
+//////////////////////////////////////
+
+A middleware that will help us upload photos. Multer is a node.js middleware for handling multipart/form-data, which is primarily used for uploading files.
+
+Here's an easy way to show how multer works:
+
+In user controller, we'll require multer. To use multer, we will declare a variable 'upload' that will contain multer() plus an option that will specify where the uploaded file will be stored:
+
+  const upload = multer({ dest: public/img/users });
+
+We will add 'upload.single('photo')' as a middleware in the 'updateMe' route. It should be placed before the updateMe middleware. 
+
+  'single' means that a single file will be uploaded
+  'photo' is the name that we will see in the 'fieldname' after we upload a file.
+
+Now if we check public/img/users, we can't open the file we uploaded because it has no file extension. We need configure multer to specify the file name format and create a function that will filter the files to be upload. We will only allow photos to be upload to our server. We can allow other file formats to be uploaded if we want to.
+
+Here's how to configure multer:
+
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/img/users');
+  },
+  filename: (req, file, cb) => {
+    const ext = file.mimetype.split('/')[1];
+    cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+  }
+})
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb (new AppError('Only photos can be uploaded', 400), false);
+  }
+}
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter
+});
+
+upload.single('photo'); // multer WILL run a next().
+
+// multer.diskStorage() and multer.memoryStorage() are 2 ways to store files. multer.memoryStorage() stores the files in memory as Buffer objects.
+
+// 'req' is requested
+
+// 'file' is fom req.file that multer will provide. req.file is an object that contains the metadata of the uploaded file. It contains the fieldname, filename, mimetype(the format of the uploaded data). The mimetype of an uploaded jpeg photo will contain this string: 'image/jpeg'. To get the file extension when creating a filename format, we will split the string and get the 'jpeg'.
+
+// 'cb' is like 'next()' in expressjs. 'cb' can also handle errors and it's placed in the first argument.
+
+// 'destination' option is the same with 'dest: public/img/users'
+
+// 'filename' option will determine the format of the filename. We want to add the user id from req.user and the date in milliseconds so that there won't be any duplicate files. The file extension will be from 'req.file'. Since we have access to 'file', we will get the extension from 'file.mimetype.split('/')[1]'
+
+/////////////////////////////////////
+// Resizing (and other image processsing) user photos using Sharp
+/////////////////////////////////////
+
+Since we need our users to upload square photos for their profile pic, it is important to resize the photos they provide in case they upload photos with weird shapes.
+
+We first need to import 'sharp'
+
+  npm i sharp
+
+require sharp as needed
+
+  const sharp = require('sharp');
+
+If you used 'multer.diskStorage()', please disregard the code because we will be using 'multer.memoryStorage()'. We only need to temporarily hold on to the data before we do the photo resizing.
+
+  const multerStorage = multer.memoryStorage();
+
+The temporary file will be accessible thru 'req.file.buffer'. Also, 'req.file.filename' is undefined when we use multer.memoryStorage(). 
+
+We need to create another middleware before userController.updateMe and after userController.uploadUserPhoto
+
+  exports.editUserPhoto = async (req, res, next) => {
+    if (!req.file) return next()
+
+    req.file.filename = `user-${req.user.id}.jpeg`
+
+    await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({quality: 90})
+    .toFile(`public/img/users/${req.file.filename}`
+    );
+
+    next();
+  }
+
+Since 'req.file.filename' is undefined because we used multer.memoryStorage(), we will store the filename format there.
+
+Now, it is important to note that 'sharp()' will create an object. Because of that, we can chain methods that will do the image processing.
+
+'sharp()' does return a promise and since it will go thru a lot of methods, it would be wise to use async/await.
+
+I removed the 'date.now()' from the filename so that one user can only have one photo. Any new upload will replace the old photo.
+
+////////////////////////////////////
+// Uploading multiple photos using multer and sharp
+////////////////////////////////////
+
+As for why we need to upload the photos using multer and sharp as opposed to just adding it directly to the server, I honestly have no idea.
+
+As far as I know, we're here to learn how to upload multiple files using multer and sharp. 
+
+In the tourController, we need to copy most of the code from multer and sharp except the one with 'upload.single()'. We will be using another method for multiple files.
+
+Please note that we need at least 4 images when creating/updating a tour. When we created our schema for the tour, we specified one photo for the 'imageCover' and 3 'image' that will showcase the tour. 
+
+Here's the middleware:
+
+  exports.uploadTourPhotos = upload.fields([
+    {name: 'imageCover', maxCount: 1},
+    {name: 'images', maxCount: 3}
+  ]);
+
+Please note that we don't need to add 'next()' because multer will do it by itself.
+
+If we will only need upload photos in the 'images' field, we will use the '.array()' method:
+
+  upload.array('images', 3);
+
+If we only need to upload 1 photo for 1 field, we'll use '.single()':
+
+  upload.single('images');
+
+Now that we specified what fieldnames multer is expecting, we can go to postman and send a form data
+
+Under 'key' & 'value', we will type:
+
+'imageCover'    'photo1'
+'images'        'photo2'
+'images'        'photo3'
+'images'        'photo4'
+
+Next, we will create another middleware to resize and process the images we uploaded. Please note that multer will add an object in the request object. If we will upload a single file using '.single()', the details can be accessed thru 'req.file'. But for multiple files using '.fields()' or '.array()', the file details can be accessed thru 'req.files'.
+
+//////////////////////////////////
+// Creating a complex email handler
+//////////////////////////////////
+
+We first created simple function in lesson 135 that will send an email to our users in case they decided to reset their passwords. Now, we will create a class that will accept a 'user' object, which will contain the user name and email, plus an 'url', which could be the reset password link or other link that we want our users to have access to. 
+
+The class will contain several methods with each of them serving a specific purpose such as password reset, an email confirming the user's recently purchased tour, etc.
+
+  const pug = require('pug');
+  const { htmlToText } = require('html-to-text');
+
+  module.exports = class Email {
+    constructor(user, url) {
+      this.to = user.email;
+      this.firstName = user.name.split(' ')[0];
+      this.lastName = user.name.split(' ')[1];
+      this.url = url;
+      this.from = process.env.EMAIL_FROM;
+    }
+
+    createTransport() {
+      if (process.env.NODE_ENV === 'production') {
+        // use sendgrid
+        return 1;
+      }
+
+      return transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+    }
+
+    async emailTemplate(template, subject) {
+      const html = pug.renderFile(`${__dirname/../views/${template}.pug}`, {
+        firstName: this.firstName,
+        url: this.url,
+        subject
+      });
+
+      const setOptions = {
+        from: this.from,
+        to: this.to,
+        subject,
+        html,
+        text: htmlToText(html)
+      };
+
+      await this.createTransport().sendMail(setOptions);
+    }
+
+    async sendWelcome {
+      await this.emailTemplate('welcome', 'Welcome to Natours!');
+    }
+  }
+
+Everything inside the constructor() is self explanatory. createTransport() will...create the transport for the email. 
+
+The 'emailTemplate()' method will focus on rendering html to the email, converting html to text and setting the email options.
+
+We will be using pug templates to show some HTML in the emails. Different emails will have different pug templates. We normally use 'res.render()' to render the pug templates. But for this email handler, we will be using 'pug.renderFile()' that accepts the path of the pug template it needs to render. Like 'res.render', it can also accept an object of variables that we can use in the template. 
+
+We need to import pug into the email.js file.
+
+'__dirname' is the folder of the email.js file, which is utils.
+
+To convert the html to text, we need another module 'html-to-text'
+
+'this.createTransport().sendMail(setOptions)' returns a promise, which is why we are using async/await. Since 'sendWelcome()' will use the async code, 'sendWelcome()' should also have async/await.
+
+// Email Template
+
+Now about the email template. Jonas used a responsive email template found in github:
+
+https://github.com/leemunroe/responsive-html-email-template
+
+According to the guy who made this template, different email have inconsistent CSS support. Which is why we need to add the inline CSS to the html template.
+
+The html was converted to pug using https://html2pug.now.sh/
+
+The inline CSS should be placed in a separate pug file to reduce the clutter in the file. We should create a baseEmail pug file and specific pug files for different email templates. 
+
+With this setup, we'll proceed to the authController and run our email class in the signup route. 
+
+////////////////////////////////////
+// Using Sendgrid
+////////////////////////////////////
+
+Just watch chapter 208
+
+After creating an account in Sendgrid, we will use the STMP option as opposed to the API since we are already using nodemailer. 
+
+Please refer to nodemailer documentation for the code:
+
+https://nodemailer.com/smtp/well-known/
+
+Because Sendgrid will send emails to real email accounts, our app must run in 'production' environment for this to sense.
+
+Sendgrid will require you to a sender identity before you can send your emails. Now it's important that the email you place in the 'email from' in sendgrid is the same email placed in process.env.EMAIL_FROM.
+
+I used a mailsac account for the 'email from' and sent the email to my personal gmail account.
+
+Also, Sendgrid doesn't want your email to be from gmail, yahoo or other email service. What worked for me is an email from mailsac. A corporate or personal email might work as well.
+
+///////////////////////////////////
+// Checkout using Stripe
+///////////////////////////////////
+
+https://stripe.com/docs/api/checkout/sessions
+
+Stripe will handle everything related to payments. During payment, we will be redirected to a webpage created by Stripe and we won't have to worry about any sensitive user data since Stripe will handle all of that. 
+
+We first need to create a 'get' route that will handle the payment. This route will not follow the REST principle (CRUD) and its only purpose is to run the Stripe code. 
+
+Before anything else, we need to install the Stripe module at version 7.0.0 because Jonas is using that version (npm i stripe@7.0.0). As of this writing, Stripe for NodeJS is at version 8.138.0. A lot of the code that Jonas is using in his tutorial are already deprecated. So adjustments are to be done to make this work.
+
+In the bookingController, we need to import Stripe. 'stripe' is a method that will accept the API secret key from their website. Check the documentation for more info.
+
+  const stripe = required('stripe');
+  const Stripe = stripe(process,env.STRIPE_SECRETKEY);
+
+OR
+
+  const stripe = required('stripe')(process,env.STRIPE_SECRETKEY);
+
+Now, we need to create a session. It's basically a payment request in the server side of our app. It will tell Stripe that someone want to purchase something from our app. The deductions in their credit/debit card will happen in the client side of our app and later in the code.
+
+Since we need to have access to user's email & the tour name, price, summary and imageCover, we need to do a query using the tourId parameter in the URL (we can only buy the tours in webpages of each tours) AND we have access to req.user because this route is protected by authController.protect.
+
+  const session = await stripe.checkout.sessions.create({
+   payment_method_types: ['card'],
+   mode: 'payment',
+   success_url: `${req.protocol}://${req.get('host')}/`,
+   cancel_url: `${req.protocol}://${req.get('host')}/tours/${tour.slug}`,
+   customer_email: req.user.email,
+   client_reference_id: req.params.tourID,
+   line_items: [
+     {
+      quantity: 1,
+      price_data: {
+        unit_amount: tour.price * 100,
+        currency: 'usd',
+        product_data: {
+          name: `${tour.name} Tour` ,
+          description: tour.summary,
+          images: ['https://media-cdn.tripadvisor.com/media/photo-s/0b/22/72/23/place-plum-tours.jpg']
+        }
+      }  
+    }
+  ]
+ })
+
+ Please read the documentation for more info on the parameters and options. The name, description and images are deeply nested, so take note of that. 
+
+ Images, in particular, accepts an array since it can take in multiple images. Also, the image you will add here must be hosted somewhere (already in the internet). 
+
+ 'unit_amount' is the price of the tour. We multiplied to 100 because we need to add 2 zeros for the cents. 
+
+For the client side code, we need to create a new file, stripe.js, which will contain a function that accepts the tourID from the tour.pug file when we do a DOM manipulation using datasets. The function will use axios to run our API route '/api/v1/bookings/checkout-session/:tourId'.
+
+Before we write the code for the client side, we need to add a script file in the tour.pug file so that we will have access to the Stripe library in the client-side. 
+
+We will add this script to the head of tour.pug:
+
+  script(src='https://js.stripe.com/v3/')
+
+Now that we have this script, we will now have access to Stripe() library, which will accept the public key that is found in the Stripe website. As for the reason why I placed the Stripe() code inside the try block is because it keeps on running even if we don't need it. That causes errors when I run the app. By placing it inside the try block, it would ensure that Stripe() will only run when 'bookTour()' was invoked. 
+
+Look for the path of the 'session.id' by doing a console.log of the session. Axios stores the result of whatever it does in '.data'. 
+
+Check the documentation for more info.
+
+  export const bookTour = async (tourId) => {
+  try {
+    const stripe = Stripe('pk_test_51IU6tBBuJmqItreCt9sIGmUb7vJPSWVb1NkmWNHHWjpQwNAeXIHxCJCGJpTddBrQ3gLdf3S0H7yU7Q0MXEDcCVqm00Z8PamZYl')
+    const session = await axios(`/api/v1/bookings/checkout-session/${tourId}`);
+    console.log(session);
+
+    await stripe.redirectToCheckout({ sessionId: session.data.session.id });
+  } catch (err) {
+    console.log(err);
+    showAlert('error', err);
+
+  }
+}
+
+If everything goes well (DOM manipulation included), we should be redirected to Stripe's own checkout webpage. To do a test transaction, the card # is 4242 4242 4242 4242... and you can fill up the rest with fake info. 
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////
+// Getting the URL parameter without using Express (req.params)
+////////////////////////////////////
+
+Here's the code:
+  const params = new URL(window.location.href).pathname;
+  const token = params.split('/')[2];
+
+'window.location.href' will give you the entire URL but for some reason, you can't manipulate it. Apparently, it's read-only. So we need to use 'new URL()', which returns an object. We'll chain it with '.pathname' to remove the other stuff we don't need. Also, the data type is string. 
+
+Since the pathname consist of several characters separated by '/', we will use String.split('/'). And the query parameters we need is usually in the '2' index because the split will return an array of 3 elements: ['', 'path', 'parameter'].
+
 
 
 
@@ -1411,3 +1804,16 @@ pkill -9 node
 [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
 
 -- There are probably 2 'next()'
+
+[nodemon] Internal watch failed: ENOSPC: System limit for number of file watchers reached, watch
+
+-- run this code in the terminal:
+  echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+
+  What this command does is to increase the number of watches allowed for a single user. By the default the number can be low (8192 for example). When nodemon tries to watch large numbers of directories for changes it has to create several watches, which can surpass that limit.
+
+Cast to string failed for value "{}" at path "name"
+  
+  -- an error related to DOM
+  
+  Check the code that will get the data from the input fields. This error usually pops up because you forgot the '.value' in 'document.querySelector().value'

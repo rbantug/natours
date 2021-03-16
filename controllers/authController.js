@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const catchAsyncErrors = require('../utils/catchAsyncErrors');
 const User = require('../Models/userModel');
 const AppError = require('../utils/appError');
-const sendEmail = require('../utils/email');
+const Email = require('../utils/email');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -42,6 +42,8 @@ exports.signup = catchAsyncErrors(async (req, res, next) => {
     passwordChangedAt: req.body.passwordChangedAt,
     role: req.body.role,
   });
+  const url = `${req.protocol}://${req.get('host')}/myAccount`;
+  await new Email(newUser, url).sendWelcome();
   sendToken(newUser, 201, res);
 });
 
@@ -100,6 +102,7 @@ exports.protect = catchAsyncErrors(async (req, res, next) => {
     return next(new AppError('The user recently changed the password.', 401));
   }
   req.user = currentUser; // freshUser will be available in the next middleware / route handler
+  res.locals.user = currentUser;
   next();
 });
 
@@ -108,26 +111,34 @@ exports.protect = catchAsyncErrors(async (req, res, next) => {
 // 'decodedData.iat' is a timestamp of when the JWT was created.
 
 exports.isLoggedIn = async (req, res, next) => {
-  if (req.cookies.jwt) {
-    const decodedData = await promisify(jwt.verify)(
-      req.cookies.jwt,
-      process.env.JWT_SECRET
-    );
-    // Check if the user still exist
-    const currentUser = await User.findById(decodedData.id);
-    if (!currentUser) {
+  try {
+    if (req.cookies.jwt) {
+      const decodedData = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+      // Check if the user still exist
+      const currentUser = await User.findById(decodedData.id);
+      if (!currentUser) {
+        return next();
+      }
+      // Check if the user changed the password after the JWT was issued
+      if (currentUser.changedPasswordAfter(decodedData.iat)) {
+        return next();
+      }
+      // There is a logged in user
+      res.locals.user = currentUser; // instead of req.user, we will use 'res.locals'. 'res.locals' can store variables that our pug template can access.  --> http://expressjs.com/en/5x/api.html#res.locals
       return next();
+  
     }
-    // Check if the user changed the password after the JWT was issued
-    if (currentUser.changedPasswordAfter(decodedData.iat)) {
-      return next();
+    next();  
+  } catch (err) {
+    if (err.message === 'jwt expired') {
+      res.clearCookie('jwt');
+      return next(new AppError('You session has expired. Please login again.', 401));
     }
-    // There is a logged in user
-    res.locals.user = currentUser; // instead of req.user, we will use 'res.locals'. 'res.locals' can store variables that our pug template can access.  --> http://expressjs.com/en/5x/api.html#res.locals
-    return next();
-
   }
-  next();
+  
 };
 
 // promisify(jwt.verify) will become a promise based API. This code will run first and then it will do its jwt.verify thing with the token and the secret code.
@@ -174,21 +185,21 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   }) */
 
   // 3. Send the token to user email
-  const resetHTML = `${req.protocol}://${req.get(
-    'host'
-  )}/api/v1/resetPassword/${resetToken}`;
 
-  // 'req.protocol' will contain the request protocol string which is either HTTP or https.
-
-  const message = `Did you forgot your password? Submit a PATCH request with your new password to ${resetHTML}.\nIf you didn't forgot your password, please disregard this email.`;
 
   // in case of an error in the sendEmail(), which is a promise, we can't just send errors using catchAsyncErrors(), we need to delete the values of passwordResetToken and passwordResetExpires. We will use a try/catch block.
   try {
-    await sendEmail({
-      email: user.email,
-      subject: 'Your password reset token (Valid for 10 minutes)',
-      message: message,
-    });
+    /* const resetHTML = `${req.protocol}://${req.get(
+      'host'
+    )}/api/v1/resetPassword/${resetToken}`; */
+
+    const resetHTML = `${req.protocol}://${req.get(
+      'host'
+    )}/resetPassword/${resetToken}`;
+  
+    // 'req.protocol' will contain the request protocol string which is either HTTP or https.
+    
+    new Email(user, resetHTML).sendPasswordReset();
 
     res.status(200).json({
       status: 'success',
@@ -264,3 +275,52 @@ exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
   // 4. log user in and send JWT
   sendToken(user, 200, res);
 });
+
+exports.logout = (req, res) => {
+  res.clearCookie('jwt'); // probably a better solution??
+  res.status(200).json({ status: 'success' });
+}
+
+/* exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10000), // 10 sec
+    httpOnly: true,
+    //secure: process.env.NODE_ENV === 'production',
+  });
+  res.status(200).json({ status: 'success' });
+} */
+
+// secure option was not included because there are no sensitive data in the cookie.
+
+exports.preventLogin = (req, res, next) => {
+  if (res.locals.user) {
+    return next(new AppError('You are already logged in', 403));
+  }
+  next();
+}
+
+exports.preventMyAccountAccess = (req, res, next) => {
+  if (!res.locals.user) {
+    return next(new AppError('Please log in', 403));
+  }
+  next();
+}
+
+exports.validateResetPasswordToken = catchAsyncErrors( async (req, res, next) => {
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(
+      new AppError('The password reset token is invalid or has expired', 400)
+    );
+  }
+  next();
+})

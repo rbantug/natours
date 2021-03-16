@@ -18,6 +18,7 @@ const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const viewRouter = require('./routes/viewRouter');
+const bookingRouter = require('./routes/bookingRoutes');
 const AppError = require('./utils/appError');
 const errorController = require('./controllers/errorController');
 // const { getAllTours } = require('./controllers/tourController');
@@ -132,10 +133,10 @@ app.use(
 // Creating Middlewares
 /////////////////////////
 
-app.use((req, res, next) => {
+/* app.use((req, res, next) => {
   console.log(req.cookies); // This works because of the cookie parser module
   next();
-});
+}); */
 
 // Middleware has access to request, response & next function. The third argument is always for the 'next' function that when invoked, executes the next middleware. Check lesson 58 for the request-response cycle.
 
@@ -155,6 +156,7 @@ app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/bookings', bookingRouter);
 
 //////////////////////////////////////////
 // Route for unhandled Routes (URL error)
