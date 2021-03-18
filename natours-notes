@@ -1754,6 +1754,14 @@ Require it in the app.js and add it to the existing middlewares.
 
   app.use(compression());
 
+///////////////////////////////////////
+// Heroku
+///////////////////////////////////////
+
+After installing Heroku on your machine and login to it using the terminal, you need to edit the 'start' script in package.json.
+
+Heroku will use 'start' to run the app and since we currently have nodemon in that script, we need to edit it. Change 'nodemon' to 'node'.
+
 
 
 
