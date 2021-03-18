@@ -14,6 +14,7 @@ const hpp = require('hpp');
 const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
@@ -199,5 +200,11 @@ app.all('*', (req, res, next) => {
 app.use(errorController);
 
 // please check errorController.js for more info.
+
+////////////////////////////////////
+// Compression
+////////////////////////////////////
+
+app.use(compression());
 
 module.exports = app;

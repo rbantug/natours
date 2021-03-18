@@ -252,12 +252,15 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
+/* 
+///// A sample middleware to test the post-find middleware
+
 tourSchema.post(/^find/, function (doc, next) {
   console.log(
     `This query took ${Date.now() - this.start} milliseconds to finish.`
   );
   next();
-});
+}); */ 
 
 // 'this.find()' can be other queries. The purpose of the code is to exclude all documents with 'secretTour: true'.
 
@@ -283,7 +286,7 @@ tourSchema.pre('aggregate', function (next) {
       $match: { secretTour: { $ne: true } },
     });
   }
-  console.log(this.pipeline());
+  //console.log(this.pipeline());
   next();
 });
 

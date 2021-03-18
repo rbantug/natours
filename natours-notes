@@ -1397,13 +1397,15 @@ In package.json, we will create 2 scripts:
 
 "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js --public-url /js"
 
-"build:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js --public-url /js"
+"build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js --public-url /js"
 
-Running 'parcel watch' will work but the bundle file will appear in some folder. We want to parcel to watch index.js. 
+Running 'parcel watch' will work but the bundle file will appear in some folder. We usually run this script during development and it will not provide any compression or performance optimization.
 
 '--out-dir ./public/js --out-file bundle.js' refers to the output directory and the file name of the output file.
 
 Running 'watch:js' will create a bundle.js file at the js folder. 
+
+Running 'build:js' is for the production type code. There will be compression and performance optimization.
 
 
 //////////////////////////////////////
@@ -1740,9 +1742,17 @@ Check the documentation for more info.
 
 If everything goes well (DOM manipulation included), we should be redirected to Stripe's own checkout webpage. To do a test transaction, the card # is 4242 4242 4242 4242... and you can fill up the rest with fake info. 
 
+//////////////////////////////
+// Compression
+//////////////////////////////
 
+'Compression' is a module adds a middleware that will compress our html or json responses. Images will not be compressed because most of the images are already compressed (jpeg).
 
+  npm i Compression
 
+Require it in the app.js and add it to the existing middlewares. 
+
+  app.use(compression());
 
 
 
