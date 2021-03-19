@@ -23,12 +23,13 @@ if (mapBox){
 }
 
 if (loginForm) {
-  loginForm.addEventListener('submit', (e) => {
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     document.getElementById('loginBtn').textContent = 'Processing...';
     const email = document.getElementById('email-login').value;
     const password = document.getElementById('password-login').value;
-    login(email, password);
+    await login(email, password);
+    document.getElementById('loginBtn').textContent = 'login';
   });
 }
 
