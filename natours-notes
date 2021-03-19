@@ -1758,9 +1758,43 @@ Require it in the app.js and add it to the existing middlewares.
 // Heroku
 ///////////////////////////////////////
 
-After installing Heroku on your machine and login to it using the terminal, you need to edit the 'start' script in package.json.
+After installing Heroku on your machine and logging in to it using the terminal thru 'heroku login', you need to edit the 'start' script in package.json.
 
 Heroku will use 'start' to run the app and since we currently have nodemon in that script, we need to edit it. Change 'nodemon' to 'node'.
+
+Now regarding the PORT in server.js. Heroku will assign a random PORT in the 'process.env.PORT'. This means that we NEED to use this variable when specifying the port in server.js.
+
+In the terminal, type 'heroku create'. This will create a new remote branch 'heroku' under our repo. It will also create a random name for our app. 
+
+https://fathomless-caverns-03164.herokuapp.com/
+
+Now that we need to do a push to that new remote branch 'heroku'
+
+  git push heroku main 
+
+We can try opening the app by running: 
+  
+  heroku open
+
+Unfortunately, our environment variables are not yet set and this will result to an error.
+
+// Setting the Environments variables
+
+If we want to add "NODE_ENV=production" to heroku's environment variable, we will type in the terminal:
+
+  heroku config:set NODE_ENV=production
+
+We can also add these env variables in the heroku website in the settings of our app under config vars
+
+// Changing the name of our app
+
+While we can edit the name of our app in the heroku website, it will create a problem in the terminal of our local machine. So we need to change the name in our local machine.
+
+  heroku apps:rename <<custom name>>
+
+// Updating app code after deploying to heroku
+
+After editing our code, we will run the script 'npm run b' 
 
 
 
