@@ -12,13 +12,13 @@ const signToken = (id) => {
   });
 };
 
-const sendToken = (user, statusCode, res) => {
+const sendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
 
   res.cookie('jwt', token, {
     expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 3600000), // 2 hours
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: req.secure || req.headers('x-forwarded-proto') === 'https',
   });
 
   // Remove password from response JSON
@@ -44,7 +44,7 @@ exports.signup = catchAsyncErrors(async (req, res, next) => {
   });
   const url = `${req.protocol}://${req.get('host')}/myAccount`;
   await new Email(newUser, url).sendWelcome();
-  sendToken(newUser, 201, res);
+  sendToken(newUser, 201, req, res);
 });
 
 // 'newUser' was edited from 'const newUser = await User.create(req.body)' to what it is right now. The problem with passing the whole req.body is that new users can manipulate the data like making themselves the admin. By limiting what data gets to the new document, we will be able to avoid problems.
@@ -67,7 +67,7 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
   }
 
   // 3. If everything is ok, send token to user client
-  sendToken(user, 200, res);
+  sendToken(user, 200, req, res);
 });
 
 // regarding 'User.findOne({ email }).select('+password')' --> In userModel.js, we added the schemaoption 'select' to remove the password in the query everytime we request it. It will not show up in the JSON. In order to get that password back, we will add '.select('+password')' in findOne()
@@ -249,7 +249,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
   // We will create a pre save hook that will check if the password was modified. If it was modified, we will update the 'passwordChangedAt' property.
 
   // 4. Log in user, send JWT
-  sendToken(user, 200, res);
+  sendToken(user, 200, req, res);
 });
 
 ///////////////////////////////////////////
@@ -273,7 +273,7 @@ exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
   await user.save();
 
   // 4. log user in and send JWT
-  sendToken(user, 200, res);
+  sendToken(user, 200, req, res);
 });
 
 exports.logout = (req, res) => {

@@ -452,6 +452,21 @@ Regarding 'UnhandledRejection', each time a unhandled rejection occurs in our co
 
 'server.close()' accepts a callback function. Please note that 'server' is 'app.listen' in server.js. '.close()' method doesn't actually close the server, it just stops new connections. In order to stop the server, we will include 'process.exit(1)' in the callback function. 
 
+// SIGTERM from heroku
+
+Every 24 hours, heroku will send a SIGTERM to shut down and restart our app. Now we need to handle this so that no ongoing request or response will be affected by the shutdown.
+
+We will add this code after the code for the unhandledRejection in server.js
+
+  process.on('SIGTERM', () => {
+  console.log('👋 SIGTERM recieved, shutting DOWN!!');
+  server.close(() => {
+    console.log('👋 process terminated!')
+  })
+})
+
+We will not add 'process.exit(1)' because heroku will do that for us.
+
 ////////////////////////////////////////
 // Fixing Uncaught Exceptions
 ////////////////////////////////////////
@@ -589,6 +604,42 @@ Express.js has method for cookies
 You add this code before the response.status().json()
 
 http://expressjs.com/en/5x/api.html#res.cookie
+
+// Additional info for https:
+
+  Code before changes:
+
+  res.cookie('jwt', token, {
+    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 3600000), // 2 hours
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+  });
+
+In the code above, secure cookies will only be sent if process.env.NODE_ENV === 'production'. Now the problem with this is that our app will not always be in https even if process.env.NODE_ENV === 'production'.
+
+A way to check if our app is running in https is to check if 'req.secure' OR 'req.headers('x-forwarded-proto') === 'https''
+
+  res.cookie('jwt', token, {
+    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 3600000), // 2 hours
+    httpOnly: true,
+    secure: req.secure || req.headers('x-forwarded-proto') === 'https',
+  });
+
+The X-Forwarded-Proto (XFP) header is a de-facto standard header for identifying the protocol (HTTP or HTTPS) that a client used to connect to your proxy or load balancer.
+
+X-Forwarded-Proto can be set by the reverse proxy (in heroku) to tell the app whether it is https or http or even an invalid name. This value is reflected by req.protocol.  
+
+Please note that this solution is specific to heroku.
+
+Now there's another problem. 'req.secure' will not work because heroku's proxy will redirect or modify all incoming request to our application before they reach the app. We need to add this code to app.js:
+
+  app.enable('trust proxy');
+
+// Why use 'trust proxy'?
+
+When running an Express app behind a reverse proxy, some of the Express APIs may return different values than expected. In order to adjust for this, the trust proxy application setting may be used to expose information provided by the reverse proxy in the Express APIs. 
+
+tldr: X-Forwarded-Proto will now work
 
 ////////////////////////////////////////
 // Cross Site Scripting Attack
@@ -1794,7 +1845,14 @@ While we can edit the name of our app in the heroku website, it will create a pr
 
 // Updating app code after deploying to heroku
 
-After editing our code, we will run the script 'npm run b' 
+After editing our code, we will run the script 'npm run build:js' to bundle all our code.
+
+Do:
+  git add 
+  git commit
+  git push heroku origin
+
+
 
 
 

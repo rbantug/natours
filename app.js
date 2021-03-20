@@ -24,6 +24,8 @@ const AppError = require('./utils/appError');
 const errorController = require('./controllers/errorController');
 // const { getAllTours } = require('./controllers/tourController');
 
+app.enable('trust proxy');
+
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -130,6 +132,12 @@ app.use(
   })
 );
 
+////////////////////////////////////
+// Compression
+////////////////////////////////////
+
+app.use(compression());
+
 /////////////////////////
 // Creating Middlewares
 /////////////////////////
@@ -201,10 +209,5 @@ app.use(errorController);
 
 // please check errorController.js for more info.
 
-////////////////////////////////////
-// Compression
-////////////////////////////////////
-
-app.use(compression());
 
 module.exports = app;
