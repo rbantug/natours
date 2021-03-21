@@ -33,10 +33,16 @@ app.set('views', path.join(__dirname, 'views'));
 //MIDDLEWARE
 //========================================
 
-app.use(cors({
+/* app.use(cors({
   origin: `127.0.0.1:${process.env.PORT}`,
   credentials: true,
-}));
+})); */
+
+app.use(cors());
+
+app.options('*', cors())
+
+
 
 /////////////////////////
 // Serving Static Files
