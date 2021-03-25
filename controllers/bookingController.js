@@ -44,6 +44,7 @@ exports.getCheckoutSession = catchAsyncErrors( async (req, res, next) => {
 // THIS IS TEMPORARY SOLUTION -- createBookingCheckout is not safe since anyone who knows the tour id, the user id and the price can book a tour without paying for it.
 
 exports.createBookingCheckout = catchAsyncErrors( async (req, res, next) => {
+  console.log(req.body);
   const { tour, user, price } = req.query;
   if (!tour || !user || !price) return next();
 
@@ -51,6 +52,15 @@ exports.createBookingCheckout = catchAsyncErrors( async (req, res, next) => {
   res.redirect(req.originalUrl.split('?')[0]);
   next();
 })
+
+/* exports.createBookingCheckout = catchAsyncErrors( async (req, res, next) => {
+  const { tour, user, price } = req.query;
+  if (!tour || !user || !price) return next();
+
+  await Booking.create({ tour, user, price });
+  res.redirect(req.originalUrl.split('?')[0]);
+  next();
+}) */
 
 exports.getAllBookings = handlerFactory.getAll(Booking);
 exports.getSingleBooking = handlerFactory.getOne(Booking);
