@@ -77,9 +77,7 @@ exports.webhookCheckout = (req, res, next) => {
   if (event.type === 'checkout.session.completed') {
     createBookingCheckout(event.data.object);
     res.status(200).json({received: true});
-  } else return next(AppError('Invalid event type', 400));
-
-
+  } 
 };
 
 exports.getAllBookings = handlerFactory.getAll(Booking);
