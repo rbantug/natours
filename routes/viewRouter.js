@@ -15,7 +15,7 @@ router.get('/emailSent', viewsController.splashPageAfterForgotPassword);
 
 router.use(authController.isLoggedIn);
 
-router.get('/', bookingController.createBookingCheckout, viewsController.getOverview);
+router.get('/', viewsController.getOverview);
 router.get('/tour/:slug', viewsController.getTour);
 router.get('/login', authController.preventLogin, viewsController.getLoginForm);
 

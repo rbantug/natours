@@ -22,6 +22,7 @@ const viewRouter = require('./routes/viewRouter');
 const bookingRouter = require('./routes/bookingRoutes');
 const AppError = require('./utils/appError');
 const errorController = require('./controllers/errorController');
+const bookingController = require('./controllers/bookingController');
 // const { getAllTours } = require('./controllers/tourController');
 
 app.enable('trust proxy');
@@ -93,6 +94,16 @@ const limiter = rateLimiter({
 app.use('/api', limiter);
 
 // The 'limiter' function is a middleware. Since we want all request that will go to the api to pass through this middleware, we will be using 'app.use()'.
+
+////////////////////////////////////////
+// Stripe webhook
+////////////////////////////////////////
+
+router.post('/webhook-checkout', express.raw({ type: 'application/json' }), bookingController.webhookCheckout);
+
+// instead of adding this to the view routes, we need to add this before the express body parser. We still need to parse this but in raw format. Express has middleware for this: 'express.raw()'. Stripe requires you to use this parser. express.raw will only accept application/json. 
+
+// https://stripe.com/docs/webhooks/build
 
 ////////////////////////////////////////
 // Body-parser. Creates 'req.body' object

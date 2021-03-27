@@ -1,0 +1,81 @@
+//////////////////////////////////////
+// Webhooks
+//////////////////////////////////////
+
+https://www.youtube.com/watch?v=41NOoEz3Tzc
+
+Webhooks allows different web applications and services to communicate with each other. 
+
+When an user triggers an event in a particular application or service (app 1), that app sends a request (usually a POST request) to another app or API (app 2) connected to it. The app or API will then consume the data from the request and use that data thru different ways. An example is a notification will pop up in app 2 that someone did something in app 1.
+
+Some apps or services can only send request (like Github). And there are those that can handle these requests (like Discord). You can set up a way to notify the users in Discord that someone pushed a commit in a repo at Github.
+
+////////////////////////////////////
+// Connecting Github to Discord
+////////////////////////////////////
+
+In Discord, go to Edit Channel > Integrations > Webhooks > New Webhook. A new card will show up with options to change the name of the webhook and on what channel you'd like the notification to appear. After setting them up, click on 'Copy Webhook URL' 
+
+In Github, go to the repo you'd want an event to be monitored. Go to Settings > Webhooks > Add Webhook. 
+
+You'll be asked for a 'payload url', which is the URL you copied from Discord. After pasting the URL, you need to add '/github' at the end of the URL.
+
+'Content-type' is 'application/json'
+
+On 'Which events would you like to trigger this webhook?', you have several options. You can let github send everything that happens in the repo to discord or specify individual events. 
+
+And then click on 'Add Webhook'
+
+We can improve the notification if we let our API intercept the data from Github, modify that data and send that data to Discord.
+
+/////////////////////////////////////
+// Ngrok
+/////////////////////////////////////
+
+In order for our API to send a POST request to Discord, we need our local server to have access to the internet. While we can do that using platforms like heroku, there is a simplier way to connect our server to the net.
+
+Download ngrok from their website. In your terminal, go to the directory of the ngrok file. 
+
+Sign up in their website and get the authtoken to connect to your account.
+
+To run your local server in the internet, you FIRST need to run your server. In the terminal, type: './ngrok http <<PORT>>'. The PORT is the port number you use in your local server. 
+
+Copy the url in 'Forwarding'. There are options to use http or https. Use that url to run your local server in the net. 
+
+//////////////////////////////////
+// Github -> API -> Discord
+//////////////////////////////////
+
+In our code, we need to have a 'app.post' with the endpoint of '/github'. What will happen is that whenever someone triggers an event in the Github repo, Github will send a POST request to our API. We need a route to handle that POST request.
+
+In 'app.post('/github')', we will run axios. The HTTP method is 'POST', the url is the url we got from Discord. The data is a bit complicated.
+
+Discord.js (API) has its own documentation. It would be easier to check the documentation on how discord.js will use those data from the POST request from github. 
+
+///////////////////////////////////
+// Going Severless using Netlify
+///////////////////////////////////
+
+We need to get the Netlify CLI using npm
+
+  npm i netlify -g
+
+Next, we'll run 'netlify login' in the terminal. This will connect with our netlify account.
+
+Now about discorder.js. 'exports.handler' has 2 parameters, 'event' and 'context'. 'event' is like response but it returns a string. We need it to be in json to access the info. We'll do a JSON.parse()
+
+  const body = JSON.parse(event.body);
+
+
+Since we don't have a response, we will just return a status code of 204.
+
+Before we can deploy our serverless function, we need to specify where our function is located in our directory. By default, netlify will search for any function inside 'YOUR_BASE_DIRECTORY/netlify/functions'
+
+You can also set this up in the web UI. In the Netlify web interface, go to Site settings > Functions and enter a path to the directory in your repository where your serverless functions will be stored.
+
+To edit the environment variable, go to Site Settings > Build & Deploy > Environment variable > Edit Variable 
+
+Now we will run 'netlify deploy --prod' or 'netlify deploy -p'. Netlify will ask for the directory where our serverless function is located. By default, it will search in the root (.), go for that.
+
+Please note that it might not work in the first time you implement this. In case of an error, do another 'netlify deploy --prod'.
+

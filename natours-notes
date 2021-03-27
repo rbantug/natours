@@ -1437,6 +1437,59 @@ And another CSP:
 
 "default-src 'self' https://js.stripe.com/v3/ https://cdnjs.cloudflare.com https://api.mapbox.com; base-uri 'self'; block-all-mixed-content; connect-src 'self' https://js.stripe.com/v3/ https://cdnjs.cloudflare.com/ https://*.mapbox.com/; font-src 'self' https://fonts.google.com/ https: data:;frame-ancestors 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' https://js.stripe.com/v3/ https://cdnjs.cloudflare.com/ https://api.mapbox.com/ blob:; script-src-attr 'none'; style-src 'self' https: 'unsafe-inline'; upgrade-insecure-requests;"
 
+// A newer article about CORS
+
+CORS or cross origin resource sharing 
+
+When another website is accessing the API thru herokuapp.com, this is usually not allowed. A request with a different protocol, domain, subdomain or port is considered as a cross origin request.
+
+So let say our api is at 'api.natours.com' and our website is at 'natours.com'. When our website request something from our api, that is a cross origin request.
+
+A solution is to import the CORS module from npm (code above). 
+
+To allow all request:
+
+  app.use(cors());
+
+To allow request only on a single website. An use case is if the api has a different domain name with the front end website. We will add the url of the front end website in the origin option.
+
+  app.use(cors({
+    origin: 'https://www.example.com'
+  }));
+
+When CORS request are complex, it would first do an options request / pre-flight request. Now what are complex requests? These are requests that have special headers in them and are usually NOT GET or POST request. These are DELETE or PATCH request. 
+
+Expressjs needs to handle this option request before we proceed to the PATCH/DELETE request or request with special headers.
+
+  app.options('api/v1/tour/:id', cors());
+
+  OR
+
+  app.options('*', cors());
+
+Using '*' will include all the routes that can do a PATCH or DELETE request. Please note that 'options' is just another HTTP method like GET, POST, PATCH, DELETE.
+
+Please note that 'app.use(cors())' will handle the option request by default. But just to be safe, add the code after 'app.use(cors())'.
+
+For more info, check the documenation:
+
+https://expressjs.com/en/resources/middleware/cors.html
+
+Options to take note of are:
+
+  methods
+    Puts restrictions on the methods your server will accept. (Access-Control-Allow-Methods)
+
+  allowedHeaders 
+    Puts restrictions on the headers your server will accept (Access-Control-Allow-Headers)
+
+  optionsSuccessStatus
+    Provides a status code to use for successful OPTIONS requests, since some legacy browsers (IE11, various SmartTVs) choke on 204.   
+
+A good video about CORS:
+
+https://www.youtube.com/watch?v=Ka8vG5miErk
+
 
 ///////////////////////////////////
 // Parcel Bundler
@@ -1801,7 +1854,7 @@ If everything goes well (DOM manipulation included), we should be redirected to 
 
   npm i Compression
 
-Require it in the app.js and add it to the existing middlewares. 
+Require it in the app.js and add it at the beginning of the existing middlewares. It won't work if you add it at the end.
 
   app.use(compression());
 
@@ -1852,7 +1905,25 @@ Do:
   git commit
   git push heroku origin
 
+////////////////////////////
+// Other heroku commands
+////////////////////////////
 
+// heroku logs --tail
+
+-- It will show all the logs
+
+// heroku ps 
+
+-- It will show our dynos(isolated linux container)
+
+// heroku ps:restart
+
+-- Heroku will send a SIGTERM and it will restart our app
+
+// heroku status
+
+-- Check for problems. If you can't log in to heroku or you can't push to heroku main, there might be a problem with heroku tools, dashboard and CLI problem.
 
 
 
