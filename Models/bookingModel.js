@@ -32,7 +32,7 @@ const bookingSchema = new mongoose.Schema({
 bookingSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'tour',
-    select: '-guides name startDates'
+    select: '-guides'
   }).populate('user');
   next();
 
