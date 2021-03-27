@@ -99,7 +99,7 @@ app.use('/api', limiter);
 // Stripe webhook
 ////////////////////////////////////////
 
-router.post('/webhook-checkout', express.raw({ type: 'application/json' }), bookingController.webhookCheckout);
+app.post('/webhook-checkout', express.raw({ type: 'application/json' }), bookingController.webhookCheckout);
 
 // instead of adding this to the view routes, we need to add this before the express body parser. We still need to parse this but in raw format. Express has middleware for this: 'express.raw()'. Stripe requires you to use this parser. express.raw will only accept application/json. 
 
