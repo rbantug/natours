@@ -13,6 +13,8 @@ router.get('/forgotPassword', viewsController.forgotPassword);
 router.get('/resetPassword/:token', authController.validateResetPasswordToken, viewsController.resetPassword);
 router.get('/emailSent', viewsController.splashPageAfterForgotPassword);
 
+router.use(viewsController.alert);
+
 router.use(authController.isLoggedIn);
 
 router.get('/', viewsController.getOverview);

@@ -6,6 +6,7 @@ import { updateSettings } from './updateAcctData';
 import { signup } from './signup';
 import { forgotPassword, resetPassword } from './forgotResetPassword'; 
 import { bookTour } from './stripe'; 
+import { showAlert, hideAlert } from './alert';
 
 const mapBox = document.getElementById('map'); 
 const loginForm = document.getElementById('form-login');
@@ -16,6 +17,7 @@ const signupForm = document.getElementById('formSignup');
 const forgotPasswordForm = document.getElementById('form-forgotPassword');
 const resetPasswordForm = document.getElementById('formResetPassword');
 const bookTourBtn = document.getElementById('book-tour');
+const bookingAlert = document.querySelector('body').dataset.alert;
 
 if (mapBox){
   const location1 = JSON.parse(mapBox.dataset.locations);
@@ -101,7 +103,11 @@ if (resetPasswordForm) {
 if (bookTourBtn) {
   bookTourBtn.addEventListener('click', (e) => {
     e.target.textContent = 'Processing...';
-    const { tour } = e.target.dataset
+    const { tour } = e.target.dataset;
     bookTour(tour);
   })
+}
+
+if (bookingAlert) {
+  showAlert('success', bookingAlert, 20);
 }

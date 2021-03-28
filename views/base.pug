@@ -12,7 +12,7 @@ html
       )
       title Natours | #{title || tour}
 
-  body
+  body(data-alert=`${alert ? alert : ""}`)
   // Header
   include _header.pug
 
