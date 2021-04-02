@@ -661,6 +661,10 @@ How to prevent this:
 
 And other methods that I'm currently unaware of.
 
+About Helmet.js's xssFilter() option, enabling this filter will prevent XSS thru adding the header 'X-XSS-PROTECTION'. Unfortunately, this header is a bit buggy and it is recommended to not use it.
+
+A better option would be to use the xss-clean middleware. This middlware will sanitize user input coming from POST body (req.body), GET queries (req.query), and url params (req.params).
+
 ////////////////////////////////////////
 // cookie VS localStorage VS sessionStorage
 ////////////////////////////////////////
@@ -720,6 +724,8 @@ You can create several limiter functions for different routes or just create one
 https://www.npmjs.com/package/helmet
 
 Helmet modifies and hides some of the header from the client for security reasons. 
+
+Check the CSP section of this note.
 
 ////////////////////////////////////////
 // NoSQL query injection 
@@ -1490,6 +1496,14 @@ A good video about CORS:
 
 https://www.youtube.com/watch?v=Ka8vG5miErk
 
+
+///////////////////////////////////
+// CSP using Helmet.js
+///////////////////////////////////
+
+This will tackle the options within Helmet that is related to Content Security Policy.
+
+app.use(helmet()) will automatically include all the middleware introduced above, except noCache(), and contentSecurityPolicy(), but these can be enabled if necessary. You can also disable or configure any other middleware individually, using a configuration object.
 
 ///////////////////////////////////
 // Parcel Bundler
